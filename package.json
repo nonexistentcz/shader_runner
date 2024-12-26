@@ -1,0 +1,37 @@
+{
+  "name": "shader_runner",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prod:build": "webpack --mode production",
+    "dev:build": "webpack --mode development",
+    "ts:build": "tsc",
+    "ts:watch": "tsc --watch",
+    "serve": "webpack serve --open --mode development",
+    "start": "tsc && http-server -p 3000",
+    "dev": "run-p ts:watch serve"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/webpack": "^5.28.5",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.3",
+    "http-server": "^14.1.1",
+    "sass": "^1.83.0",
+    "sass-loader": "^16.0.4",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "webpack-dev-server": "^5.2.0"
+  }
+}
