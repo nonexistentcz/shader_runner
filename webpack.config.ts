@@ -17,7 +17,7 @@ const config: webpack.Configuration = {
   },
   module: {
     rules: [
-      { test: /\.txt$/, use: "raw-loader" },
+      { test: /\.txt|frag|vert$/, use: "raw-loader" },
       { test: /\.tsx?$/, use: "ts-loader", exclude: "/node_modules/" },
       {
         test: /\.s[ac]ss$/,

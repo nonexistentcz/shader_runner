@@ -3,10 +3,13 @@ import { GL2 } from "./gl";
 
 export const defaultId = "opengl-runner";
 
-export class Canvas {
-  private static instance: Canvas | null = null;
-  constructor(public el: HTMLCanvasElement) {
-    if (Canvas.instance) {
+export class GLCanvas {
+  private static instance: GLCanvas | null = null;
+  get el() {
+    return this._el;
+  }
+  constructor(private _el: HTMLCanvasElement) {
+    if (GLCanvas.instance) {
       throw new Error("canvas can only be instantiated once");
     }
   }
@@ -18,16 +21,16 @@ export class Canvas {
     canvas.style.width = "100dvw";
     canvas.style.height = "100dvh";
     canvas.style.display = "block";
-    Canvas.instance = new Canvas(canvas);
-    return Canvas.instance;
+    GLCanvas.instance = new GLCanvas(canvas);
+    return GLCanvas.instance;
   }
 
   static getInstance(id: string) {
-    return Canvas.instance ?? Canvas.init(id);
+    return GLCanvas.instance ?? GLCanvas.init(id);
   }
 
-  onResize(fn: (canvas: HTMLCanvasElement) => void, debounced = true) {
-    const listener = () => fn(this.el);
+  onResize(fn: (canvas: this) => void, debounced = true) {
+    const listener = () => fn(this);
     window.addEventListener(
       "resize",
       debounced ? debounce(listener) : listener
@@ -36,10 +39,10 @@ export class Canvas {
   }
 
   getGl() {
-    return new GL2(this.el);
+    return new GL2(this._el);
   }
 }
 
 export function getCanvas(id = defaultId) {
-  return Canvas.getInstance(id);
+  return GLCanvas.getInstance(id);
 }
