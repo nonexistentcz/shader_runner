@@ -5,13 +5,14 @@ export const defaultId = "opengl-runner";
 
 export class GLCanvas {
   private static instance: GLCanvas | null = null;
-  get el() {
-    return this._el;
-  }
-  constructor(private _el: HTMLCanvasElement) {
+  private constructor(private _el: HTMLCanvasElement) {
     if (GLCanvas.instance) {
       throw new Error("canvas can only be instantiated once");
     }
+  }
+
+  get el() {
+    return this._el;
   }
 
   private static init(id: string) {
@@ -21,12 +22,20 @@ export class GLCanvas {
     canvas.style.width = "100dvw";
     canvas.style.height = "100dvh";
     canvas.style.display = "block";
-    GLCanvas.instance = new GLCanvas(canvas);
+    GLCanvas.instance = new GLCanvas(canvas).adjustSizeAndViewport();
     return GLCanvas.instance;
   }
 
   static getInstance(id: string) {
     return GLCanvas.instance ?? GLCanvas.init(id);
+  }
+
+  adjustSizeAndViewport() {
+    const { _el: canvas } = this;
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    this.getGl().viewportFromCanvas();
+    return this;
   }
 
   onResize(fn: (canvas: this) => void, debounced = true) {
@@ -39,7 +48,7 @@ export class GLCanvas {
   }
 
   getGl() {
-    return new GL2(this._el);
+    return GL2.getInstance(this._el);
   }
 }
 

@@ -5,12 +5,23 @@ import { GLBuffer } from "./buffer";
 import { Vec4Array } from "./utils/vector";
 
 export class GL2 {
+  private static instance: GL2 | null = null;
+
   public gl: WebGL2RenderingContext;
 
-  constructor(public canvas: HTMLCanvasElement) {
+  private constructor(public canvas: HTMLCanvasElement) {
+    if (GL2.instance) {
+      throw new Error("gl can only be instantiated once");
+    }
+
     const context = canvas.getContext("webgl2");
     if (!context) throw new Error("could not get webgl2 context");
     this.gl = context;
+  }
+
+  static getInstance(canvas: HTMLCanvasElement) {
+    if (GL2.instance) return GL2.instance;
+    return new GL2(canvas);
   }
 
   createProgram() {

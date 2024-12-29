@@ -4,7 +4,6 @@ import { vec4 } from "./utils/vector";
 import fragShader from "./shader/main.frag";
 import vertShader from "./shader/main.vert";
 import { BufferType, EnableFlags, ShaderType } from "./enums";
-import { GLProgram } from "./program";
 import { GLBuffer } from "./buffer";
 
 type Buffers = {
@@ -25,12 +24,16 @@ function getClearColor(frame: number) {
 const VERTEX_BUFFER_TEMP = new Float32Array([
   x,
   y,
+  0,
   x + width,
   y,
+  0,
   x + width,
   y + height,
+  0,
   x,
   y + height,
+  0,
 ]);
 
 const INDEX_BUFFER_TEMP = new Uint16Array([0, 1, 2, 3]);
@@ -41,18 +44,24 @@ function run() {
 }
 
 function init() {
-  const canvas = getCanvas().onResize((canvas) => {
-    gl.viewport(0, 0, canvas.el.offsetWidth, canvas.el.offsetHeight);
+  const canvas = getCanvas().onResize(() => {
+    canvas.adjustSizeAndViewport();
+    gl.viewportFromCanvas();
   });
   const gl = canvas.getGl();
-  var buffers = initBuffers(gl);
   const program = initProgram(gl);
-  bindCoordinates(program, (fn) =>
-    gl.withBufferBind(fn, buffers.frag, buffers.vert)
+  const buffers = initBuffers(gl);
+  gl.withBufferBind(
+    () =>
+      program
+        .getAttribLocation("a_position")
+        .enable()
+        .setPointer(3, WebGL2RenderingContext.FLOAT, false, 0, 0),
+    buffers.frag,
+    buffers.vert
   );
   gl.enable(EnableFlags.DepthTest);
-  gl.setClearColor(getClearColor(0));
-  gl.viewport(0, 0, canvas.el.offsetWidth, canvas.el.offsetHeight);
+  gl.viewportFromCanvas();
   return { buffers, gl };
 }
 
@@ -83,25 +92,18 @@ function initProgram(gl: GL2) {
     .use();
 }
 
-function bindCoordinates(
-  program: GLProgram,
-  withBind: (fn: () => void) => void
-) {
-  withBind(() => {
-    program
-      .getAttribLocation("a_position")
-      .enable()
-      .setPointer(2, WebGL2RenderingContext.FLOAT, false, 0, 0);
-  });
-}
-
 function main(buffers: Buffers, gl: GL2) {
   return (time: number) => {
     const { frag, vert } = buffers;
     gl.withBufferBind(
       () => {
         gl.setClearColor(getClearColor(time)).clear();
-        gl.gl.drawElements(gl.gl.TRIANGLE_STRIP, 4, gl.gl.UNSIGNED_SHORT, 0);
+        gl.gl.drawElements(
+          gl.gl.TRIANGLE_FAN,
+          INDEX_BUFFER_TEMP.length,
+          gl.gl.UNSIGNED_SHORT,
+          0
+        );
         requestAnimationFrame(main(buffers, gl));
       },
       frag,
