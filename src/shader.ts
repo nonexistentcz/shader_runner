@@ -1,3 +1,5 @@
+import { GLShaderSource } from "./shaderSource";
+
 export class GLShader {
   constructor(
     private gl: WebGL2RenderingContext,
@@ -8,7 +10,21 @@ export class GLShader {
     return this.shader;
   }
 
-  setSource(source: string) {
+  async fetchSource(path: string) {
+    const res = await fetch(path);
+    if (!res.ok || !res.body) throw "failed fetching shader source";
+    return this.setSource(await res.text());
+  }
+
+  setSource(
+    source: string,
+    transformFn?: (source: GLShaderSource) => GLShaderSource
+  ): this {
+    if (transformFn) {
+      const sourceObj = new GLShaderSource();
+      this.gl.shaderSource(this.shader, transformFn(sourceObj).resolve(source));
+      return this;
+    }
     this.gl.shaderSource(this.shader, source);
     return this;
   }
