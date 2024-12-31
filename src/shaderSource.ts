@@ -1,7 +1,7 @@
 import { GLTransformer } from "./transformer/transformer";
 
 export class GLShaderSource {
-  public transformers: Array<GLTransformer> = [];
+  private transformers: Array<GLTransformer> = [];
 
   use(transformer: GLTransformer) {
     this.transformers.push(transformer);
