@@ -3,20 +3,22 @@ import { ShaderFile } from "./shaderFileTransformer";
 const dependencyMap: Map<string, ShaderFile[]> = new Map();
 
 export function dependencyTransformer(basePath = "") {
-  return function transform(
-    shaderNode: ShaderFile,
-    stack = "",
-    visited = new Set<string>()
-  ): string {
-    const newStack = `${stack} -> ${shaderNode.filePath}`;
+  const visited = new Set<string>();
+  const stack: string[] = [];
+  const imported = new Set<string>();
+  return function transform(shaderNode: ShaderFile): string {
+    stack.push(shaderNode.filePath);
+    if (imported.has(shaderNode.filePath)) return "";
     if (visited.has(shaderNode.filePath)) {
-      throw new Error(`dependency cycle detected, require stack "${newStack}"`);
+      throw new Error(
+        `dependency cycle detected, require stack "${stack.join(" -> ")}"`
+      );
     }
-
+    imported.add(shaderNode.filePath);
     visited.add(shaderNode.filePath);
     let nodes = getMemoizedDependencies(shaderNode.filePath, basePath);
     const result = nodes
-      .map((node) => transform(node, newStack, visited))
+      .map((node) => transform(node))
       .join("")
       .concat(
         `/// meta:path:${shaderNode.filePath}\n\n${shaderNode.getContents(
@@ -25,6 +27,7 @@ export function dependencyTransformer(basePath = "") {
       );
 
     visited.delete(shaderNode.filePath);
+    stack.pop();
 
     return result;
   };
