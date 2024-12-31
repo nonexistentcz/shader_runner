@@ -2,6 +2,7 @@ import webpack from "webpack";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import { join } from "node:path";
 import "webpack-dev-server";
+import { getServer } from "./server/getServer";
 
 const BUILD_DIR = join(__dirname, "dist");
 
@@ -26,6 +27,7 @@ const config: webpack.Configuration = {
     ],
   },
   devServer: {
+    app: getServer,
     static: BUILD_DIR,
     port: 80,
   },

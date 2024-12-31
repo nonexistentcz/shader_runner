@@ -38,18 +38,18 @@ const VERTEX_BUFFER_TEMP = new Float32Array([
 
 const INDEX_BUFFER_TEMP = new Uint16Array([0, 1, 2, 3]);
 
-function run() {
-  const { gl, buffers } = init();
+async function run() {
+  const { gl, buffers } = await init();
   requestAnimationFrame(main(buffers, gl));
 }
 
-function init() {
+async function init() {
   const canvas = getCanvas().onResize(() => {
     canvas.adjustSizeAndViewport();
     gl.viewportFromCanvas();
   });
   const gl = canvas.getGl();
-  const program = initProgram(gl);
+  const program = await initProgram(gl);
   const buffers = initBuffers(gl);
   gl.withBufferBind(
     () =>
@@ -78,14 +78,22 @@ function initBuffers(gl: GL2): Buffers {
   };
 }
 
-function initProgram(gl: GL2) {
+async function initProgram(gl: GL2) {
   return gl
     .createProgram()
     .attachShader(
-      gl.createShader(ShaderType.Fragment).setSource(fragShader).compile()
+      (
+        await gl
+          .createShader(ShaderType.Fragment)
+          .fetchSource("./shader/main.frag")
+      ).compile()
     )
     .attachShader(
-      gl.createShader(ShaderType.Vertex).setSource(vertShader).compile()
+      (
+        await gl
+          .createShader(ShaderType.Vertex)
+          .fetchSource("./shader/main.vert")
+      ).compile()
     )
     .link()
     .validate()
