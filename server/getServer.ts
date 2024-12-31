@@ -5,7 +5,12 @@ import { shaderTemplate } from "./shaderTemplate";
 import nocache from "nocache";
 import { watch } from "node:fs";
 
-const basePath = "./src/shader/";
+const BASE_PATH = "./src/shader/";
+
+watch(BASE_PATH, (type, fileName) => {
+  if (!fileName || type === "rename") return;
+  ShaderFile.invalidate(fileName);
+});
 
 export async function getServer() {
   const app = express();
@@ -16,17 +21,12 @@ export async function getServer() {
     res.status(200);
     res.type("text/plain");
     res.send(
-      ShaderFile.fromPath(fileName, basePath).getContents((builder) =>
-        builder.use(dependencyTransformer(basePath)).use(shaderTemplate)
+      ShaderFile.fromPath(fileName, BASE_PATH).getContents((builder) =>
+        builder.use(dependencyTransformer(BASE_PATH)).use(shaderTemplate)
       )
     );
   });
   app.use(router);
 
-  watch(basePath, (_, fileName) => {
-    if (!fileName) return;
-    ShaderFile.invalidate(fileName);
-    console.log(`invalidating: ${fileName}`);
-  });
   return app;
 }
