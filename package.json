@@ -9,9 +9,8 @@
     "dev:build": "webpack --mode development",
     "ts:build": "tsc",
     "ts:watch": "tsc --watch",
-    "serve": "webpack serve --open --mode development",
-    "start": "tsc && http-server -p 3000",
-    "dev": "run-p ts:watch serve"
+    "dev": "webpack serve --open --mode development",
+    "start": "tsc && http-server -p 3000"
   },
   "keywords": [],
   "author": "",
