@@ -30,6 +30,10 @@ export class ShaderFile {
     const builder = new ShaderTransformBuilder();
     return transformFn(builder).resolve(this).contents;
   }
+
+  static invalidate(path: string) {
+    return ShaderFile.loadedShaders.delete(path);
+  }
 }
 
 function readShaderContents(filePath: string) {
