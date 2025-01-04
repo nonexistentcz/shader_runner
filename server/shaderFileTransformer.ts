@@ -11,12 +11,17 @@ export type ShaderFileTransformer =
   | ShaderFileTransformerObject;
 
 export class ShaderFile {
+  private _isInvalid = false;
   private static loadedShaders: Map<string, ShaderFile> = new Map();
   constructor(public filePath: string, public contents: string) {}
 
+  get isInvalid() {
+    return this._isInvalid;
+  }
+
   static fromPath(filePath: string, basePath = "") {
     const instance = ShaderFile.loadedShaders.get(filePath);
-    if (instance) return instance;
+    if (instance && !instance._isInvalid) return instance;
     const contents = readShaderContents(join(basePath, filePath));
     const shader = new ShaderFile(filePath, contents);
     ShaderFile.loadedShaders.set(filePath, shader);
@@ -32,7 +37,9 @@ export class ShaderFile {
   }
 
   static invalidate(path: string) {
-    return ShaderFile.loadedShaders.delete(path);
+    const shader = ShaderFile.loadedShaders.get(path);
+    if (!shader) return;
+    shader._isInvalid = true;
   }
 }
 

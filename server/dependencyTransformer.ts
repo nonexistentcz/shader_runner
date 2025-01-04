@@ -8,15 +8,15 @@ export function dependencyTransformer(basePath = "") {
   const imported = new Set<string>();
   return function transform(shaderNode: ShaderFile): string {
     stack.push(shaderNode.filePath);
-    if (imported.has(shaderNode.filePath)) return "";
     if (visited.has(shaderNode.filePath)) {
       throw new Error(
         `dependency cycle detected, require stack "${stack.join(" -> ")}"`
       );
     }
-    imported.add(shaderNode.filePath);
+    if (imported.has(shaderNode.filePath)) return "";
     visited.add(shaderNode.filePath);
-    let nodes = getMemoizedDependencies(shaderNode.filePath, basePath);
+    imported.add(shaderNode.filePath);
+    let nodes = getMemoizedDependencies(shaderNode, basePath);
     const result = nodes
       .map((node) => transform(node))
       .join("")
@@ -33,9 +33,12 @@ export function dependencyTransformer(basePath = "") {
   };
 }
 
-function getMemoizedDependencies(filePath: string, basePath = "") {
+function getMemoizedDependencies(
+  { filePath, isInvalid }: ShaderFile,
+  basePath = ""
+) {
   const storedDependencies = dependencyMap.get(filePath);
-  if (storedDependencies) return storedDependencies;
+  if (!isInvalid && storedDependencies) return storedDependencies;
   const { contents } = ShaderFile.fromPath(filePath, basePath);
   const dependencies = getDependencies(contents, basePath);
   dependencyMap.set(filePath, dependencies);
