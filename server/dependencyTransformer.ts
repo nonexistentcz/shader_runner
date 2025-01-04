@@ -21,7 +21,7 @@ export function dependencyTransformer(basePath = "") {
       .map((node) => transform(node))
       .join("")
       .concat(
-        `/// meta:path:${shaderNode.filePath}\n\n${shaderNode.getContents(
+        `/// meta:path:${shaderNode.filePath}\n${shaderNode.getContents(
           (builder) => builder.use(metaRemover)
         )}\n`
       );
@@ -45,18 +45,20 @@ function getMemoizedDependencies(
   return dependencies;
 }
 
+const META_REGEX = /^\/\/\/\s*use/;
+
 function metaRemover({ contents }: ShaderFile) {
   return contents
     .split("\n")
-    .filter((line) => !line.startsWith("/// use:"))
+    .filter((line) => !META_REGEX.test(line))
     .join("\n");
 }
 
 function getMeta(contents: string) {
   return contents
     .split("\n")
-    .filter((line) => line.startsWith("/// use:"))
-    .map((line) => line.replace(/^\/{3}/, ""))
+    .filter((line) => META_REGEX.test(line))
+    .map((line) => line.replace(META_REGEX, ""))
     .map((line) => line.split(":")[1].trim());
 }
 
