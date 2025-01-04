@@ -12,7 +12,7 @@ export class GLShader {
 
   async fetchSource(path: string) {
     const res = await fetch(path);
-    if (!res.ok || !res.body) throw "failed fetching shader source";
+    if (!res.ok) throw "failed fetching shader source";
     return this.setSource(await res.text());
   }
 
