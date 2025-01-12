@@ -1,13 +1,19 @@
+import { ShaderType } from "./enums";
 import { GLShaderSource } from "./shaderSource";
 
 export class GLShader {
   constructor(
     private gl: WebGL2RenderingContext,
-    private shader: WebGLShader
+    private shader: WebGLShader,
+    private type: ShaderType
   ) {}
 
   getShader() {
     return this.shader;
+  }
+
+  getType() {
+    return this.type;
   }
 
   async fetchSource(path: string) {

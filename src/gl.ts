@@ -28,6 +28,13 @@ export class GL2 {
     return new GLProgram(this.gl, this.gl.createProgram());
   }
 
+  useProgram(program: GLProgram | WebGLProgram) {
+    this.gl.useProgram(
+      program instanceof GLProgram ? program.getProgram() : program
+    );
+    return this;
+  }
+
   viewport(x: number, y: number, width: number, height: number) {
     this.gl.viewport(x, y, width, height);
     return this;
@@ -42,7 +49,7 @@ export class GL2 {
   createShader(shaderType: ShaderType) {
     const shader = this.gl.createShader(shaderType);
     if (!shader) throw "couldn't create shader";
-    return new GLShader(this.gl, shader);
+    return new GLShader(this.gl, shader, shaderType);
   }
 
   createBuffer(bufferType: BufferType) {

@@ -1,3 +1,4 @@
+import { ShaderType } from "./enums";
 import { Runner } from "./runner";
 
 const runner = new Runner();
@@ -6,7 +7,8 @@ async function init() {
   const canvas = runner.getCanvas();
   canvas.el.tabIndex = 1;
   canvas.el.addEventListener("keypress", (ev) => {
-    console.log("click");
+    runner.loadShader("/shader/secondary.frag", ShaderType.Fragment);
+    runner.prepareProgram();
   });
   main();
 }

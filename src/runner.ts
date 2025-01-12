@@ -1,7 +1,7 @@
 import { getCanvas, GLCanvas } from "./canvas";
 import { GL2 } from "./gl";
 import { vec4 } from "./utils/vector";
-import { BufferType, EnableFlags, ShaderType } from "./enums";
+import { BufferType, ShaderType } from "./enums";
 import { GLBuffer } from "./buffer";
 import { GLProgram } from "./program";
 import { GLShader } from "./shader";
@@ -56,27 +56,20 @@ export class Runner {
     return this.canvas;
   }
 
-  invalidateShader(name: string) {
-    const shader = this.shaders.get(name);
-    if (shader) {
-      shader.delete();
-      this.shaders.delete(name);
-    }
-  }
-
   bindShader(shader: GLShader) {
     this.program.attachShader(shader);
   }
 
   async loadShader(name: string, shaderType: ShaderType) {
     const storedShader = this.shaders.get(name);
-    if (storedShader) this.program.attachShader(storedShader);
+    if (storedShader) this.program.attachNewShader(storedShader);
     const shader = await this.gl.createShader(shaderType).fetchSource(name);
-    this.program.attachShader(shader.compile());
+    this.shaders.set(name, shader);
+    this.program.attachNewShader(shader.compile());
   }
 
   prepareProgram() {
-    this.program.link().validate().use();
+    this.gl.useProgram(this.program.link().validate());
     this.withBind(() =>
       this.program
         .getAttribLocation("a_position")
