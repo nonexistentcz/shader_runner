@@ -1,3 +1,4 @@
+export type Vec2Array = [number, number];
 export type Vec3Array = [number, number, number];
 export type Vec4Array = [number, number, number, number];
 type MapFn = (value: number, index: number, array: number[]) => number;
@@ -35,7 +36,7 @@ export class Vec4 {
   get(): Vec4Array;
   //@ts-ignore
   get(swizzleStr: Dir): number;
-  get(swizzleStr: SwizzleStringVec2): [number, number];
+  get(swizzleStr: SwizzleStringVec2): Vec2Array;
   get(swizzleStr: SwizzleStringVec3): Vec3Array;
   get(swizzleStr: SwizzleStringVec4): Vec4Array;
   get(swizzleStr?: SwizzleString) {
@@ -58,7 +59,7 @@ export class Vec3 {
   get(): Vec3Array;
   //@ts-ignore
   get(swizzleStr: Dir): number;
-  get(swizzleStr: SwizzleStringVec2): [number, number];
+  get(swizzleStr: SwizzleStringVec2): Vec2Array;
   get(swizzleStr: SwizzleStringVec3): Vec3Array;
   get(swizzleStr: SwizzleStringVec4): Vec4Array;
   get(swizzleStr?: SwizzleString) {

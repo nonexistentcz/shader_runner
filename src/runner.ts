@@ -11,10 +11,10 @@ type Buffers = {
   vert: GLBuffer;
 };
 
-const x = -0.5;
-const y = -0.5;
-const height = 1;
-const width = 1;
+const x = -1;
+const y = -1;
+const height = 2;
+const width = 2;
 
 const NONEX = vec4([0.66, 0.12, 0.28, 1]);
 function getClearColor(frame: number) {
