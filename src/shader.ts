@@ -1,6 +1,8 @@
 import { ShaderType } from "./enums";
 import { GLShaderSource } from "./shaderSource";
 
+type TransformFn = (source: GLShaderSource) => GLShaderSource;
+
 export class GLShader {
   constructor(
     private gl: WebGL2RenderingContext,
@@ -16,16 +18,13 @@ export class GLShader {
     return this.type;
   }
 
-  async fetchSource(path: string) {
+  async fetchSource(path: string, transformFn?: TransformFn) {
     const res = await fetch(path);
     if (!res.ok) throw "failed fetching shader source";
-    return this.setSource(await res.text());
+    return this.setSource(await res.text(), transformFn);
   }
 
-  setSource(
-    source: string,
-    transformFn?: (source: GLShaderSource) => GLShaderSource
-  ): this {
+  setSource(source: string, transformFn?: TransformFn): this {
     if (transformFn) {
       const sourceObj = new GLShaderSource();
       this.gl.shaderSource(this.shader, transformFn(sourceObj).resolve(source));
