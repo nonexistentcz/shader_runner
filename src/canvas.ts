@@ -38,6 +38,10 @@ export class GLCanvas {
     return this;
   }
 
+  draw(subject: any) {
+    throw new Error("Not implemented");
+  }
+
   onResize(fn: (canvas: this) => void, debounced = true) {
     const listener = () => fn(this);
     window.addEventListener(

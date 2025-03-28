@@ -100,7 +100,7 @@ class Uniform<T> {
   constructor(
     public name: string,
     private value: T,
-    public updateFn: (
+    public _updateFn: (
       gl: WebGL2RenderingContext,
       location: WebGLUniformLocation
     ) => void
@@ -114,7 +114,9 @@ class Uniform<T> {
   }
 }
 
-export class _Uniform<T> {
+export type GLUniform<T> = typeof Uniform<T>;
+
+class _Uniform<T> {
   public location: WebGLUniformLocation | null;
 
   constructor(
