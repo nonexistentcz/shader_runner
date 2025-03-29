@@ -1,6 +1,6 @@
 import { ShaderType } from "./enums";
 import { GLShader } from "./shader";
-import { GLUniform } from "./uniform";
+import { GLUniform, GLUniformValue } from "./uniform";
 
 export class GLProgram {
   private fragmentShader: GLShader | null = null;
@@ -71,7 +71,9 @@ export class GLProgram {
     return this;
   }
 
-  useUniform(uniform: GLUniform<unknown>) {}
+  useUniform<T>(uniform: GLUniformValue<T>) {
+    return new GLUniform(this.gl, this.program, uniform);
+  }
 }
 
 class AttribLocation {

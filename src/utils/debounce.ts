@@ -1,9 +1,9 @@
-export function debounce(fn: () => unknown) {
+export function debounce(fn: (ev: UIEvent) => unknown) {
   let timerId: NodeJS.Timeout | null = null;
-  return () => {
+  return (ev: UIEvent) => {
     if (timerId) return;
     timerId = setTimeout(() => {
-      fn();
+      fn(ev);
       timerId = null;
     }, 300);
   };

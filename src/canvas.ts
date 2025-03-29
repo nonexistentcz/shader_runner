@@ -2,6 +2,7 @@ import { debounce } from "./utils/debounce";
 import { GL2 } from "./gl";
 
 export const defaultId = "opengl-runner";
+function getCanvasElement(id: string) {}
 
 export class GLCanvas {
   private static instance: GLCanvas | null = null;
@@ -42,8 +43,8 @@ export class GLCanvas {
     throw new Error("Not implemented");
   }
 
-  onResize(fn: (canvas: this) => void, debounced = true) {
-    const listener = () => fn(this);
+  onResize(fn: (ev: UIEvent, canvas: this) => void, debounced = true) {
+    const listener = (ev: UIEvent) => fn(ev, this);
     window.addEventListener(
       "resize",
       debounced ? debounce(listener) : listener

@@ -1,10 +1,11 @@
 import { getCanvas, GLCanvas } from "./canvas";
 import { GL2 } from "./gl";
-import { vec4 } from "./utils/vector";
+import { vec4, Vec4Array } from "./utils/vector";
 import { BufferType, ShaderType } from "./enums";
 import { GLBuffer } from "./buffer";
 import { GLProgram } from "./program";
 import { GLShader } from "./shader";
+import { GLUniformValue } from "./uniform";
 
 type Buffers = {
   frag: GLBuffer;
@@ -15,11 +16,6 @@ const x = -1;
 const y = -1;
 const height = 2;
 const width = 2;
-
-const NONEX = vec4([0.66, 0.12, 0.28, 1]);
-function getClearColor(frame: number) {
-  return NONEX.map((col) => col * (Math.sin(frame / 400) / 2 + 0.5)).get();
-}
 
 const VERTEX_BUFFER_TEMP = new Float32Array([
   x,
@@ -45,8 +41,8 @@ export class Runner {
   private shaders = new Map<string, GLShader>();
   private buffers: Buffers;
 
-  constructor() {
-    this.canvas = getCanvas();
+  constructor(canvasId?: string) {
+    this.canvas = getCanvas(canvasId);
     this.gl = this.canvas.getGl();
     this.program = this.gl.createProgram();
     this.buffers = this.initBuffers();
@@ -58,6 +54,10 @@ export class Runner {
 
   bindShader(shader: GLShader) {
     this.program.attachShader(shader);
+  }
+
+  bindUniform<T>(uniform: GLUniformValue<T>) {
+    return this.program.useUniform(uniform);
   }
 
   async loadShader(name: string, shaderType: ShaderType) {
@@ -104,8 +104,12 @@ export class Runner {
     this.gl.viewportFromCanvas();
   }
 
-  clear(time: number) {
-    this.gl.setClearColor(getClearColor(time));
+  setClearColor(color: Vec4Array) {
+    this.gl.setClearColor(color);
+    return this;
+  }
+
+  clear() {
     this.gl.clear();
   }
 

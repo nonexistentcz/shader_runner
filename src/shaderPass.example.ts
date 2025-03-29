@@ -28,7 +28,7 @@ const main = drawPass((pass: any) => {
 });
 
 const blur = effectPass("effects.frag", {
-  entry: "gaussianBlur",
+  entryPoint: "gaussianBlur",
   transform: (shader: GLShaderSource) => shader.use((v) => v),
 });
 

@@ -1,26 +1,41 @@
-import { ShaderType } from "./enums";
+import { GLCanvas } from "./canvas";
 import { Runner } from "./runner";
+import { uniform2fv } from "./uniform";
+import { vec4 } from "./utils/vector";
 
 const runner = new Runner();
-async function init() {
-  await runner.init();
-  const canvas = runner.getCanvas();
-  canvas.el.tabIndex = 1;
-  canvas.el.addEventListener("keypress", (ev) => {
-    runner.loadShader("/shader/secondary.frag", ShaderType.Fragment);
-    runner.prepareProgram();
-  });
-  main();
+const uMouse = uniform2fv("u_Mouse", [0, 0]);
+const uResolution = uniform2fv("u_Resolution", [0, 0]);
+const NONEX = vec4([0.66, 0.12, 0.28, 1]);
+
+function adjustCanvas(canvas: GLCanvas) {
+  canvas.adjustSizeAndViewport();
+  uResolution.update([canvas.el.width, canvas.el.height]);
 }
 
-function draw(time = 0) {
-  runner.clear(time);
+async function main() {
+  const canvas = runner.getCanvas();
+  await runner.init();
+  runner.bindUniform(uMouse);
+  runner.bindUniform(uResolution);
+  adjustCanvas(canvas);
+  runner.setClearColor(NONEX.get());
+  runner.getCanvas().onResize((_, canvas) => adjustCanvas(canvas), true);
+  canvas.el.tabIndex = 1;
+  canvas.el.addEventListener("mousemove", async (ev) => {
+    uMouse.update([ev.x, ev.y]);
+  });
+  animate();
+}
+
+function draw() {
+  runner.clear();
   runner.draw();
 }
 
-function main(time = 0) {
-  draw(time);
-  requestAnimationFrame(main);
+function animate() {
+  draw();
+  requestAnimationFrame(animate);
 }
 
-init();
+main();

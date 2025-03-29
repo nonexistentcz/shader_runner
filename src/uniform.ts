@@ -1,152 +1,154 @@
 import { Vec2Array, Vec3Array, Vec4Array } from "./utils/vector";
 
 export function uniform1f(name: string, value: number) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform1f(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform1f(location, this.value);
+  });
 }
 
 export function uniform2f(name: string, value: Vec2Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform2f(location, ...value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform2f(location, ...this.value);
+  });
 }
 
 export function uniform3f(name: string, value: Vec3Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform3f(location, ...value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform3f(location, ...this.value);
+  });
 }
 
 export function uniform4f(name: string, value: Vec4Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform4f(location, ...value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform4f(location, ...this.value);
+  });
 }
 
 export function uniform1fv(name: string, value: [number]) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform1fv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform1fv(location, this.value);
+  });
 }
 
 export function uniform2fv(name: string, value: Vec2Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform2fv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform2fv(location, this.value);
+  });
 }
 
 export function uniform3fv(name: string, value: Vec3Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform3fv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform3fv(location, this.value);
+  });
 }
 
 export function uniform4fv(name: string, value: Vec4Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform4fv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform4fv(location, this.value);
+  });
 }
 
 export function uniform1iv(name: string, value: [number]) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform1iv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform1iv(location, this.value);
+  });
 }
 
 export function uniform2iv(name: string, value: Vec2Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform2iv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform2iv(location, this.value);
+  });
 }
 
 export function uniform3iv(name: string, value: Vec3Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform3iv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform3iv(location, this.value);
+  });
 }
 
 export function uniform4iv(name: string, value: Vec4Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform4iv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform4iv(location, this.value);
+  });
 }
 
 export function uniform1uiv(name: string, value: [number]) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform1uiv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform1uiv(location, this.value);
+  });
 }
 
 export function uniform2uiv(name: string, value: Vec2Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform2uiv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform2uiv(location, this.value);
+  });
 }
 
 export function uniform3uiv(name: string, value: Vec3Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform3uiv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    gl.uniform3uiv(location, this.value);
+  });
 }
 
 export function uniform4uiv(name: string, value: Vec4Array) {
-  return new Uniform(name, value, (gl, location) =>
-    gl.uniform4uiv(location, value)
-  );
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform4uiv(location, this.value);
+  });
 }
 
-class Uniform<T> {
+export class GLUniformValue<T> {
+  private boundUniform?: GLUniform<T>;
+
   constructor(
     public name: string,
-    private value: T,
+    private _value: T,
     public _updateFn: (
+      this: GLUniformValue<T>,
       gl: WebGL2RenderingContext,
-      location: WebGLUniformLocation
+      location: WebGLUniformLocation | null
     ) => void
   ) {}
   update(val: T): this {
-    this.value = val;
+    this._value = val;
+    if (this.boundUniform) this.boundUniform.updateValue();
     return this;
   }
-  get(): T {
-    return this.value;
+  get value(): T {
+    return this._value;
+  }
+  _bind(uniform: GLUniform<T>) {
+    this.boundUniform = uniform;
+    uniform.updateValue();
+    return this;
   }
 }
 
-export type GLUniform<T> = typeof Uniform<T>;
-
-class _Uniform<T> {
+export class GLUniform<T> {
   public location: WebGLUniformLocation | null;
 
   constructor(
     public gl: WebGL2RenderingContext,
-    public valueContainer: Uniform<T>
+    private program: WebGLProgram,
+    public valueContainer: GLUniformValue<T>
   ) {
     this.location = this.gl.getUniformLocation(
-      this.gl,
+      program,
       this.valueContainer.name
     );
+    this.valueContainer._bind(this);
   }
 
-  updateLocation() {
-    this.location = this.gl.getUniformLocation(
-      this.gl,
-      this.valueContainer.name
-    );
-    if (!location) return false;
-    return true;
-  }
-
-  public updateValue(val: T) {
-    return this.valueContainer.update(val);
-  }
-
-  public updateLocationAndValue(val: T) {
-    return this.updateLocation() && this.valueContainer.update(val);
+  public updateValue() {
+    this.valueContainer._updateFn(this.gl, this.location);
+    return this;
   }
 
   public getValue() {
-    return this.valueContainer.get();
+    return this.valueContainer.value;
+  }
+
+  public getInternalValue() {
+    if (!this.location) return null;
+    return this.gl.getUniform(this.program, this.location);
   }
 }
