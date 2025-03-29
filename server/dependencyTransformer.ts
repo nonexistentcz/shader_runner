@@ -1,6 +1,6 @@
 import { ShaderFile } from "./shaderFileTransformer";
 
-const dependencyMap: Map<string, ShaderFile[]> = new Map();
+const dependencyMap: Map<string, string[]> = new Map();
 
 export function dependencyTransformer(basePath = "") {
   const visited = new Set<string>();
@@ -33,14 +33,20 @@ export function dependencyTransformer(basePath = "") {
   };
 }
 
-function getMemoizedDependencies(
+function getMemoizedDependencies(shader: ShaderFile, basePath = "") {
+  return getMemoizedDependencyList(shader, basePath).map((filePath) =>
+    ShaderFile.fromPath(filePath, basePath)
+  );
+}
+
+function getMemoizedDependencyList(
   { filePath, isInvalid }: ShaderFile,
   basePath = ""
 ) {
   const storedDependencies = dependencyMap.get(filePath);
   if (!isInvalid && storedDependencies) return storedDependencies;
   const { contents } = ShaderFile.fromPath(filePath, basePath);
-  const dependencies = getDependencies(contents, basePath);
+  const dependencies = getDependencyList(contents, basePath);
   dependencyMap.set(filePath, dependencies);
   return dependencies;
 }
@@ -62,8 +68,6 @@ function getMeta(contents: string) {
     .map((line) => line.split(":")[1].trim());
 }
 
-function getDependencies(contents: string, basePath = "") {
-  return getMeta(contents).map((filePath) =>
-    ShaderFile.fromPath(filePath, basePath)
-  );
+function getDependencyList(contents: string, basePath = "") {
+  return getMeta(contents);
 }
