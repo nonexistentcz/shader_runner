@@ -2,7 +2,17 @@ import { debounce } from "./utils/debounce";
 import { GL2 } from "./gl";
 
 export const defaultId = "opengl-runner";
-function getCanvasElement(id: string) {}
+function getCanvasElement(id: string) {
+  const existing = document.getElementById(id);
+  if (existing) {
+    if (existing instanceof HTMLCanvasElement) return existing;
+    throw new Error(`the element with the id: "${id}" is not of type canvas`);
+  }
+  const canvas = document.createElement("canvas");
+  canvas.id = id;
+  document.body.appendChild(canvas);
+  return canvas;
+}
 
 export class GLCanvas {
   private static instance: GLCanvas | null = null;
@@ -17,9 +27,8 @@ export class GLCanvas {
   }
 
   private static init(id: string) {
-    const canvas = document.createElement("canvas");
-    canvas.id = id;
-    document.body.appendChild(canvas);
+    const canvas = getCanvasElement(id);
+    // TODO: remove
     canvas.style.width = "100dvw";
     canvas.style.height = "100dvh";
     canvas.style.display = "block";
