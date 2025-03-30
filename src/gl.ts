@@ -56,10 +56,10 @@ export class GL2 {
     return new GLBuffer(this.gl, this.gl.createBuffer(), bufferType);
   }
 
-  withBufferBind<T>(fn: () => T, ...buffers: GLBuffer[]) {
-    buffers.forEach((buffer) => buffer.bind());
+  withBufferBind<T>(fn: () => T, ...buffers: Array<GLBuffer | undefined>) {
+    buffers.forEach((buffer) => buffer?.bind());
     fn();
-    buffers.forEach((buffer) => buffer.unbind());
+    buffers.forEach((buffer) => buffer?.unbind());
   }
 
   setClearColor([r, g, b, a]: Vec4Array) {

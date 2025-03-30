@@ -86,6 +86,7 @@ class AttribLocation {
 
   disable() {
     this.gl.disableVertexAttribArray(this.location);
+    return this;
   }
 
   setPointer(

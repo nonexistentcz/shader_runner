@@ -1,63 +1,47 @@
 import { getCanvas, GLCanvas } from "./canvas";
 import { GL2 } from "./gl";
-import { vec4, Vec4Array } from "./utils/vector";
+import { Vec4Array } from "./utils/vector";
 import { BufferType, ShaderType } from "./enums";
-import { GLBuffer } from "./buffer";
 import { GLProgram } from "./program";
 import { GLShader } from "./shader";
-import { GLUniformValue } from "./uniform";
-
-type Buffers = {
-  frag: GLBuffer;
-  vert: GLBuffer;
-};
-
-const x = -1;
-const y = -1;
-const height = 2;
-const width = 2;
-
-const VERTEX_BUFFER_TEMP = new Float32Array([
-  x,
-  y,
-  0,
-  x + width,
-  y,
-  0,
-  x + width,
-  y + height,
-  0,
-  x,
-  y + height,
-  0,
-]);
-
-const INDEX_BUFFER_TEMP = new Uint16Array([0, 1, 2, 3]);
+import { GLUniformValue, uniform3fv } from "./uniform";
+import { GLShape } from "./shapes";
 
 export class Runner {
   private gl: GL2;
   private canvas: GLCanvas;
   private program: GLProgram;
   private shaders = new Map<string, GLShader>();
-  private buffers: Buffers;
+  private shapes: GLShape[] = [];
+  // TODO: implement with matrices
+  private uShapePos = uniform3fv("u_ShapePos", [0, 0, 0]);
 
   constructor(canvasId?: string) {
     this.canvas = getCanvas(canvasId);
     this.gl = this.canvas.getGl();
     this.program = this.gl.createProgram();
-    this.buffers = this.initBuffers();
   }
 
   getCanvas() {
     return this.canvas;
   }
 
-  bindShader(shader: GLShader) {
+  useShader(shader: GLShader) {
     this.program.attachShader(shader);
   }
 
-  bindUniform<T>(uniform: GLUniformValue<T>) {
+  useUniform<T>(uniform: GLUniformValue<T>) {
     return this.program.useUniform(uniform);
+  }
+
+  useShape(shape: GLShape) {
+    shape.bind({
+      vertex: this.gl.createBuffer(BufferType.Vertex),
+      index: this.gl.createBuffer(BufferType.Index),
+    });
+
+    this.shapes.push(shape);
+    return this;
   }
 
   async loadShader(name: string, shaderType: ShaderType) {
@@ -70,30 +54,6 @@ export class Runner {
 
   prepareProgram() {
     this.gl.useProgram(this.program.link().validate());
-    this.withBind(() =>
-      this.program
-        .getAttribLocation("a_position")
-        .enable()
-        .setPointer(3, WebGL2RenderingContext.FLOAT, false, 0, 0)
-    );
-  }
-
-  initBuffers(): Buffers {
-    const vert = this.gl
-      .createBuffer(BufferType.Vertex)
-      .setDataWithBind(VERTEX_BUFFER_TEMP);
-    const frag = this.gl
-      .createBuffer(BufferType.Index)
-      .setDataWithBind(INDEX_BUFFER_TEMP);
-    return {
-      vert,
-      frag,
-    };
-  }
-
-  withBind<T>(fn: () => T) {
-    this.gl.withBufferBind(fn, this.buffers.frag, this.buffers.vert);
-    return this;
   }
 
   async init() {
@@ -102,6 +62,7 @@ export class Runner {
     this.prepareProgram();
     this.canvas.adjustSizeAndViewport();
     this.gl.viewportFromCanvas();
+    this.useUniform(this.uShapePos);
   }
 
   setClearColor(color: Vec4Array) {
@@ -114,12 +75,23 @@ export class Runner {
   }
 
   draw() {
-    this.withBind(() => {
-      this.gl.gl.drawElements(
-        this.gl.gl.TRIANGLE_FAN,
-        INDEX_BUFFER_TEMP.length,
-        this.gl.gl.UNSIGNED_SHORT,
-        0
+    this.shapes.forEach((shape) => {
+      this.uShapePos.update(shape.center);
+      this.gl.withBufferBind(
+        () => {
+          this.program
+            .getAttribLocation("a_position")
+            .enable()
+            .setPointer(3, WebGL2RenderingContext.FLOAT, false, 0, 0);
+          this.gl.gl.drawElements(
+            shape.drawType,
+            shape._vertexCount,
+            this.gl.gl.UNSIGNED_SHORT,
+            0
+          );
+        },
+        shape.indexBuffer,
+        shape.vertexBuffer
       );
     });
   }

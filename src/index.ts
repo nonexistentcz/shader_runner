@@ -1,28 +1,37 @@
 import { GLCanvas } from "./canvas";
 import { Runner } from "./runner";
-import { uniform2fv } from "./uniform";
+import { rectangle, ring } from "./shapes";
+import { uniform1f, uniform2fv } from "./uniform";
 import { vec4 } from "./utils/vector";
 
 const runner = new Runner();
 const uMouse = uniform2fv("u_Mouse", [0, 0]);
 const uResolution = uniform2fv("u_Resolution", [0, 0]);
+const uTime = uniform1f("u_Time", 0);
 const NONEX = vec4([0.66, 0.12, 0.28, 1]);
+const ringObj = ring(0.5, 0.4, 200).setCenter([-1, -1, 0]);
+const rectObj = rectangle(0.5, 0.5).setCenter([-1, -1, -1]);
 
 function adjustCanvas(canvas: GLCanvas) {
   canvas.adjustSizeAndViewport();
   uResolution.update([canvas.el.width, canvas.el.height]);
 }
 
-async function main() {
+async function init() {
   const canvas = runner.getCanvas();
   await runner.init();
-  runner.bindUniform(uMouse);
-  runner.bindUniform(uResolution);
+  runner.useUniform(uMouse);
+  runner.useUniform(uResolution);
+  runner.useUniform(uTime);
+  runner.useShape(ringObj);
+  runner.useShape(rectObj);
   adjustCanvas(canvas);
   runner.setClearColor(NONEX.get());
-  runner.getCanvas().onResize((_, canvas) => adjustCanvas(canvas), true);
+  runner.getCanvas().onResize((_, canvas) => adjustCanvas(canvas), false);
   canvas.el.tabIndex = 1;
   canvas.el.addEventListener("mousemove", async (ev) => {
+    const [width, height] = uResolution.value;
+    ringObj.setCenter([-1 + (ev.x / width) * 2, 1 - (ev.y / height) * 2, 0]);
     uMouse.update([ev.x, ev.y]);
   });
   animate();
@@ -33,9 +42,12 @@ function draw() {
   runner.draw();
 }
 
-function animate() {
+function animate(time = 0) {
   draw();
+  uTime.update(time);
+  ringObj.theta = (Math.sin(time / 1000) + 1) * Math.PI;
+  ringObj.updateBuffers();
   requestAnimationFrame(animate);
 }
 
-main();
+init();

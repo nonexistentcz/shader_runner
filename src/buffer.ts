@@ -5,6 +5,11 @@ type SetDataOptions = {
   bufferType?: BufferType;
 };
 
+export type Buffers = {
+  vertex: GLBuffer;
+  index: GLBuffer;
+};
+
 export class GLBuffer {
   constructor(
     private gl: WebGL2RenderingContext,
