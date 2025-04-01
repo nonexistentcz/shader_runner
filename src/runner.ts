@@ -44,6 +44,14 @@ export class Runner {
     return this;
   }
 
+  removeShape(shape: GLShape) {
+    if (shape.vertexBuffer) this.gl.deleteBuffer(shape.vertexBuffer);
+    if (shape.indexBuffer) this.gl.deleteBuffer(shape.indexBuffer);
+    const index = this.shapes.indexOf(shape);
+    if (index >= 0) this.shapes.splice(index, 1);
+    return this;
+  }
+
   async loadShader(name: string, shaderType: ShaderType) {
     const storedShader = this.shaders.get(name);
     if (storedShader) this.program.attachNewShader(storedShader);
@@ -76,7 +84,7 @@ export class Runner {
 
   draw() {
     this.shapes.forEach((shape) => {
-      this.uShapePos.update(shape.center);
+      this.uShapePos.update(shape.center.get());
       this.gl.withBufferBind(
         () => {
           this.program
