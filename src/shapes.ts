@@ -1,5 +1,5 @@
 import { Buffers, GLBuffer } from "./buffer";
-import { Vec3Array } from "./utils/vector";
+import { vec3, Vec3, Vec3Array } from "./utils/vector";
 
 export enum DrawType {
   Points = WebGL2RenderingContext.POINTS,
@@ -13,7 +13,7 @@ export enum DrawType {
 
 interface Shape {
   // TODO: implement using matrices
-  center: Vec3Array;
+  center: Vec3;
   drawType: DrawType;
 
   get vertexCount(): number;
@@ -28,7 +28,7 @@ export class GLShape implements Shape {
   protected _indexBuffer?: GLBuffer;
   public drawType = DrawType.Triangles;
   public _vertexCount = 0;
-  public center: Vec3Array = [0, 0, 0];
+  public center: Vec3 = vec3([0, 0, 0]);
 
   get vertexBuffer() {
     return this._vertexBuffer;
@@ -42,7 +42,7 @@ export class GLShape implements Shape {
     return this._vertexCount;
   }
 
-  setCenter(pos: Vec3Array) {
+  setCenter(pos: Vec3) {
     this.center = pos;
     return this;
   }

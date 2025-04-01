@@ -26,6 +26,10 @@ function handleSwizzle(swizzleStr: SwizzleString) {
   return [...swizzleStr].map((dir) => swizzleIndices[dir as Dir]);
 }
 
+export function radians(degrees: number) {
+  return (180 / Math.PI) * degrees;
+}
+
 export class Vec4 {
   constructor(private val: Vec4Array) {}
 
@@ -52,6 +56,10 @@ export function vec4(vector: Vec4Array) {
 export class Vec3 {
   constructor(private val: Vec3Array) {}
 
+  toVec2() {
+    return new Vec2([this.val[0], this.val[1]]);
+  }
+
   map(fn: MapFn, thisArg: any) {
     return new Vec3(this.val.map(fn, thisArg) as Vec3Array);
   }
@@ -70,4 +78,100 @@ export class Vec3 {
 
 export function vec3(vector: Vec3Array) {
   return new Vec3(vector);
+}
+
+export class Vec2 {
+  static fromVec3(vec: Vec3 | Vec3Array) {
+    const [x, y] = "get" in vec ? vec.get() : vec;
+    return new Vec2([x, y]);
+  }
+  constructor(private val: Vec2Array) {}
+
+  toVec3() {
+    return new Vec3([this.x, this.y, 0]);
+  }
+
+  set x(val: number) {
+    this.val[0] = val;
+  }
+  get x() {
+    return this.val[0];
+  }
+  set y(val: number) {
+    this.val[1] = val;
+  }
+  get y() {
+    return this.val[1];
+  }
+
+  map(fn: MapFn, thisArg: any) {
+    return new Vec2(this.val.map(fn, thisArg) as Vec2Array);
+  }
+
+  rotate(angle: number) {
+    return new Vec2([
+      this.x * Math.cos(angle) - this.y * Math.sin(angle),
+      this.x * Math.sin(angle) + this.y * Math.cos(angle),
+    ]);
+  }
+
+  angle() {
+    return Math.atan2(this.x, this.y);
+  }
+
+  angleTo(other: Vec2) {
+    return Math.atan2(other.x - this.x, other.y - this.y);
+  }
+
+  setAngle(angle: number) {
+    return this.rotate(this.angle() - angle);
+  }
+
+  add(other: Vec2) {
+    return new Vec2([this.x + other.x, this.y + other.y]);
+  }
+
+  subtract(other: Vec2) {
+    return new Vec2([this.x - other.x, this.y - other.y]);
+  }
+
+  multiply(val: number) {
+    return new Vec2([this.x * val, this.y * val]);
+  }
+
+  divide(val: number) {
+    return new Vec2([this.x / val, this.y / val]);
+  }
+
+  magnitude() {
+    const [x, y] = this.val;
+    return Math.sqrt(x * x + y * y);
+  }
+
+  setMagnitude(val: number) {
+    const magnitude = this.magnitude();
+    this.x = (this.x / magnitude) * val;
+    this.y = (this.y / magnitude) * val;
+  }
+
+  withMagnitude(val: number) {
+    const magnitude = this.magnitude();
+    return new Vec2([(this.x / magnitude) * val, (this.y / magnitude) * val]);
+  }
+
+  dot(other: Vec2) {
+    return this.x * other.x + this.y * other.y;
+  }
+
+  normalize() {
+    return this.withMagnitude(1);
+  }
+
+  get() {
+    return this.val;
+  }
+}
+
+export function vec2(vector: Vec2Array) {
+  return new Vec2(vector);
 }
