@@ -56,6 +56,11 @@ export class GL2 {
     return new GLBuffer(this.gl, this.gl.createBuffer(), bufferType);
   }
 
+  deleteBuffer(buffer: GLBuffer) {
+    this.gl.deleteBuffer(buffer.getBuffer());
+    return this;
+  }
+
   withBufferBind<T>(fn: () => T, ...buffers: Array<GLBuffer | undefined>) {
     buffers.forEach((buffer) => buffer?.bind());
     fn();
