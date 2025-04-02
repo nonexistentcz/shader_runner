@@ -2,7 +2,6 @@ import express from "express";
 import { ShaderFile } from "./shaderFileTransformer";
 import { dependencyTransformer } from "./dependencyTransformer";
 import { shaderTemplate } from "./shaderTemplate";
-import nocache from "nocache";
 import { watch } from "node:fs";
 
 const BASE_PATH = "./src/shader/";
@@ -15,7 +14,7 @@ watch(BASE_PATH, (type, fileName) => {
 export async function getServer() {
   const app = express();
 
-  const router = express.Router().use(nocache());
+  const router = express.Router();
   router.get("/shader/:shader", (req, res) => {
     const fileName = req.params.shader;
     res.status(200);
