@@ -17,13 +17,16 @@ export function dependencyTransformer(basePath = "") {
     visited.add(shaderNode.filePath);
     imported.add(shaderNode.filePath);
     let nodes = getMemoizedDependencies(shaderNode, basePath);
+    const defineName = `file_${shaderNode.filePath}`
+      .replace(/\..+/, "")
+      .replace("/", "_");
     const result = nodes
       .map((node) => transform(node))
       .join("")
       .concat(
-        `/// meta:path:${shaderNode.filePath}\n${shaderNode.getContents(
+        `#ifndef ${defineName}\n#define ${defineName}\n${shaderNode.getContents(
           (builder) => builder.use(metaRemover)
-        )}\n`
+        )}\n#endif\n\n`
       );
 
     visited.delete(shaderNode.filePath);
@@ -46,7 +49,7 @@ function getMemoizedDependencyList(
   const storedDependencies = dependencyMap.get(filePath);
   if (!isInvalid && storedDependencies) return storedDependencies;
   const { contents } = ShaderFile.fromPath(filePath, basePath);
-  const dependencies = getDependencyList(contents, basePath);
+  const dependencies = getDependencyList(contents);
   dependencyMap.set(filePath, dependencies);
   return dependencies;
 }
@@ -68,6 +71,6 @@ function getMeta(contents: string) {
     .map((line) => line.split(":")[1].trim());
 }
 
-function getDependencyList(contents: string, basePath = "") {
+function getDependencyList(contents: string) {
   return getMeta(contents);
 }

@@ -39,6 +39,9 @@ export class ShaderFile {
   static invalidate(path: string) {
     const shader = ShaderFile.loadedShaders.get(path);
     if (!shader) return;
+    if (!shader._isInvalid) {
+      console.log(`[Shader]: Invalidate ${shader.filePath}`);
+    }
     shader._isInvalid = true;
   }
 }
