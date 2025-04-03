@@ -1,5 +1,5 @@
 import { GLCanvas } from "./canvas";
-import { initBalls } from "./example/balls";
+import { initBalls } from "./example/shapes/entry";
 import { Runner } from "./runner";
 import { rectangle, ring } from "./shapes";
 import { uniform1f, uniform2fv } from "./uniform";
@@ -53,4 +53,5 @@ function animate(time = 0) {
   requestAnimationFrame(animate);
 }
 
+// init();
 initBalls();
