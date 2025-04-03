@@ -48,6 +48,12 @@ export function uniform4fv(name: string, value: Vec4Array) {
   });
 }
 
+export function uniform1i(name: string, value: number) {
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniform1i(location, this.value);
+  });
+}
+
 export function uniform1iv(name: string, value: [number]) {
   return new GLUniformValue(name, value, function (gl, location) {
     return gl.uniform1iv(location, this.value);
