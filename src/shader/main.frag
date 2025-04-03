@@ -1,5 +1,4 @@
 /// use:col.frag
-/// use:module/noise.glsl
 
 out vec4 fragColor;
 
