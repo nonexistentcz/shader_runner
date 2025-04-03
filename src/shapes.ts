@@ -1,5 +1,5 @@
 import { Buffers, GLBuffer } from "./buffer";
-import { vec3, Vec3, Vec3Array } from "./utils/vector";
+import { radians, Vec2, vec3, Vec3 } from "./utils/vector";
 
 export enum DrawType {
   Points = WebGL2RenderingContext.POINTS,
@@ -84,8 +84,115 @@ class Rectangle extends GLShape {
   }
 }
 
-export function rectangle(width: number, height: number) {
+export function rectangle(
+  width: number,
+  height: number,
+  outlineWidth?: number
+) {
+  if (outlineWidth) {
+    return new RectangleOutlined(width, height, outlineWidth);
+  }
   return new Rectangle(width, height);
+}
+
+class RectangleOutlined extends GLShape {
+  constructor(
+    public width: number,
+    public height: number,
+    public outlineWidth: number
+  ) {
+    super();
+  }
+
+  getVertexData(): number[] {
+    const topLeft = new Vec2([-this.width / 2, -this.height / 2]);
+    const bottomRight = new Vec2([this.width / 2, this.height / 2]);
+    const topLeftOutline = topLeft.add(
+      new Vec2([this.outlineWidth, this.outlineWidth])
+    );
+    const bottomRightOutline = bottomRight.subtract(
+      new Vec2([this.outlineWidth, this.outlineWidth])
+    );
+    console.log("getvertexdata");
+    return [
+      // 1
+      topLeft.x,
+      topLeft.y,
+      0,
+      topLeft.x,
+      topLeftOutline.y,
+      0,
+      bottomRight.x,
+      topLeftOutline.y,
+      0,
+      topLeft.x,
+      topLeft.y,
+      0,
+      bottomRight.x,
+      topLeftOutline.y,
+      0,
+      bottomRight.x,
+      topLeft.y,
+      0,
+      // 2
+      topLeft.x,
+      topLeftOutline.y,
+      0,
+      topLeft.x,
+      bottomRightOutline.y,
+      0,
+      topLeftOutline.x,
+      bottomRightOutline.y,
+      0,
+      topLeft.x,
+      topLeftOutline.y,
+      0,
+      topLeftOutline.x,
+      bottomRightOutline.y,
+      0,
+      topLeftOutline.x,
+      topLeftOutline.y,
+      0,
+      // 3
+      topLeft.x,
+      bottomRightOutline.y,
+      0,
+      topLeft.x,
+      bottomRight.y,
+      0,
+      bottomRight.x,
+      bottomRight.y,
+      0,
+      topLeft.x,
+      bottomRightOutline.y,
+      0,
+      bottomRight.x,
+      bottomRight.y,
+      0,
+      bottomRight.x,
+      bottomRightOutline.y,
+      0,
+      // 4
+      bottomRightOutline.x,
+      topLeftOutline.y,
+      0,
+      bottomRightOutline.x,
+      bottomRightOutline.y,
+      0,
+      bottomRight.x,
+      bottomRightOutline.y,
+      0,
+      bottomRightOutline.x,
+      topLeftOutline.y,
+      0,
+      bottomRight.x,
+      bottomRightOutline.y,
+      0,
+      bottomRight.x,
+      topLeftOutline.y,
+      0,
+    ];
+  }
 }
 
 class Circle extends GLShape {
@@ -106,7 +213,7 @@ class Circle extends GLShape {
   }
 }
 
-export function circle(radius: number, precision: number): Shape {
+export function circle(radius: number, precision: number) {
   return new Circle(radius, 2 * Math.PI, precision);
 }
 
@@ -138,4 +245,51 @@ class Ring extends GLShape {
 
 export function ring(radius: number, radiusInner: number, precision: number) {
   return new Ring(radius, radiusInner, 2 * Math.PI, precision);
+}
+
+class Line extends GLShape {
+  drawType = DrawType.TriangleFan;
+  constructor(public x1: Vec2, public x2: Vec2, public width: number) {
+    super();
+  }
+
+  setStart(start: Vec2) {
+    this.x1 = start;
+    return this;
+  }
+
+  setEnd(end: Vec2) {
+    this.x2 = end;
+    return this;
+  }
+
+  getVertexData(): number[] {
+    const right = this.x2
+      .subtract(this.x1)
+      .withMagnitude(this.width)
+      .rotate(Math.PI / 2);
+    const topLeft = this.x1.add(right);
+    const bottomLeft = this.x1.subtract(right);
+    const topRight = this.x2.add(right);
+    const bottomRight = this.x2.subtract(right);
+
+    return [
+      topLeft.x,
+      topLeft.y,
+      0,
+      bottomLeft.x,
+      bottomLeft.y,
+      0,
+      bottomRight.x,
+      bottomRight.y,
+      0,
+      topRight.x,
+      topRight.y,
+      0,
+    ];
+  }
+}
+
+export function line(x1: Vec2, x2: Vec2, width: number) {
+  return new Line(x1, x2, width);
 }
