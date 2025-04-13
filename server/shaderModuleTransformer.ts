@@ -2,7 +2,7 @@ import { ShaderFile } from "./shaderFileTransformer";
 
 const dependencyMap: Map<string, string[]> = new Map();
 
-export function dependencyTransformer(basePath = "") {
+export function shaderModuleTransformer(basePath = "") {
   const visited = new Set<string>();
   const stack: string[] = [];
   const imported = new Set<string>();
@@ -17,7 +17,7 @@ export function dependencyTransformer(basePath = "") {
     visited.add(shaderNode.filePath);
     imported.add(shaderNode.filePath);
     let nodes = getMemoizedDependencies(shaderNode, basePath);
-    const defineName = `file_${shaderNode.filePath}`
+    const defineName = `module_${shaderNode.filePath}`
       .replace(/\..+/, "")
       .replace("/", "_");
     const result = nodes

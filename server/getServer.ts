@@ -1,8 +1,8 @@
 import express from "express";
 import { ShaderFile } from "./shaderFileTransformer";
-import { dependencyTransformer } from "./dependencyTransformer";
 import { shaderTemplate } from "./shaderTemplate";
 import { watch } from "node:fs";
+import { shaderModuleTransformer } from "./shaderModuleTransformer";
 
 const BASE_PATH = "./src/shader/";
 
@@ -21,7 +21,7 @@ export async function getServer() {
     res.type("text/plain");
     res.send(
       ShaderFile.fromPath(fileName, BASE_PATH).getContents((builder) =>
-        builder.use(dependencyTransformer(BASE_PATH)).use(shaderTemplate)
+        builder.use(shaderModuleTransformer(BASE_PATH)).use(shaderTemplate)
       )
     );
   });
