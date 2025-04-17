@@ -1,6 +1,6 @@
 import { ring, rectangle } from "../../shapes";
 import { vec2, vec3 } from "../../utils/vector";
-import { SHAPE_SIZE, Shape } from "./entry";
+import { SHAPE_SIZE, Shape } from ".";
 
 export function createShape() {
   const angle = randomMapped(0, 2 * Math.PI);
