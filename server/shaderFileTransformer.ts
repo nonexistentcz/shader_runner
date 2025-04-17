@@ -22,6 +22,7 @@ export class ShaderFile {
   static fromPath(filePath: string, basePath = "") {
     const instance = ShaderFile.loadedShaders.get(filePath);
     if (instance && !instance._isInvalid) return instance;
+    console.log(`[Shader]: Cache ${filePath}`);
     const contents = readShaderContents(join(basePath, filePath));
     const shader = new ShaderFile(filePath, contents);
     ShaderFile.loadedShaders.set(filePath, shader);
