@@ -253,25 +253,27 @@ class Line extends GLShape {
     super();
   }
 
-  setStart(start: Vec2) {
-    this.x1 = start;
+  setStart(start: Vec2Array | Vec2) {
+    this.x1 = vec2(start);
     return this;
   }
 
-  setEnd(end: Vec2) {
-    this.x2 = end;
+  setEnd(end: Vec2Array | Vec2) {
+    this.x2 = vec2(end);
     return this;
+  }
+
+  getVector() {
+    return this.x2.subtract(this.x1);
   }
 
   getVertexData(): number[] {
-    const right = this.x2
-      .subtract(this.x1)
-      .withMagnitude(this.width)
-      .rotate(Math.PI / 2);
+    const vec = this.x2.subtract(this.x1);
+    const right = vec.rotate90().withMagnitude(this.width);
     const topLeft = this.x1.add(right);
     const bottomLeft = this.x1.subtract(right);
-    const topRight = this.x2.add(right);
-    const bottomRight = this.x2.subtract(right);
+    const topRight = topLeft.add(vec);
+    const bottomRight = bottomLeft.add(vec);
 
     return [
       topLeft.x,
