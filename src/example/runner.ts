@@ -114,12 +114,15 @@ export class Runner {
     this.adjustSizeAndViewport();
     this.canvas.onResize(() => this.adjustSizeAndViewport());
     this.canvas.el.addEventListener("mousemove", (e) => {
-      const uv = new Vec2([e.x, e.y]).divideElements(
-        new Vec2(this.uResolution.value)
-      );
+      const res = new Vec2(this.uResolution.value);
+      const uv = new Vec2([e.x, e.y]).divideElements(res);
       const coords = toCoords(new Vec2([uv.x, 1 - uv.y]));
-      this.uMouse.update(coords.get());
-      this.mouseMoveHandlers.forEach((handler) => handler(coords, e));
+      const aspectRatio = res.x / res.y;
+      const mouseCoords = new Vec2([coords.x * aspectRatio, coords.y]).divide(
+        0.9
+      );
+      this.uMouse.update(mouseCoords.get());
+      this.mouseMoveHandlers.forEach((handler) => handler(mouseCoords, e));
     });
   }
 
@@ -134,24 +137,26 @@ export class Runner {
 
   draw(time = 0) {
     this.uTime.update(time);
-    this.shapes.forEach((shape) => {
-      this.uShapePos.update(shape.center.get());
-      this.gl.withBufferBind(
-        () => {
-          this.program
-            .getAttribLocation("a_position")
-            .enable()
-            .setPointer(3, WebGL2RenderingContext.FLOAT, false, 0, 0);
-          this.gl.gl.drawElements(
-            shape.drawType,
-            shape._vertexCount,
-            this.gl.gl.UNSIGNED_SHORT,
-            0
-          );
-        },
-        shape.indexBuffer,
-        shape.vertexBuffer
-      );
-    });
+    this.shapes.forEach(this.drawShape, this);
+  }
+
+  private drawShape(shape: GLShape) {
+    this.uShapePos.update(shape.center.get());
+    this.gl.withBufferBind(
+      () => {
+        this.program
+          .getAttribLocation("a_position")
+          .enable()
+          .setPointer(3, WebGL2RenderingContext.FLOAT, false, 0, 0);
+        this.gl.gl.drawElements(
+          shape.drawType,
+          shape._vertexCount,
+          this.gl.gl.UNSIGNED_SHORT,
+          0
+        );
+      },
+      shape.indexBuffer,
+      shape.vertexBuffer
+    );
   }
 }

@@ -1,4 +1,5 @@
 /// use:module/noise.glsl
+/// use:module/color.glsl
 
 uniform vec2 u_Mouse;
 uniform vec2 u_Resolution;

@@ -1,5 +1,6 @@
 import { Buffers, GLBuffer } from "./buffer";
-import { radians, Vec2, vec3, Vec3 } from "./utils/vector";
+import { clamp, mapVec } from "./utils/ease";
+import { vec2, Vec2, Vec2Array, vec3, Vec3 } from "./utils/vector";
 
 export enum DrawType {
   Points = WebGL2RenderingContext.POINTS,
@@ -113,7 +114,6 @@ class RectangleOutlined extends GLShape {
     const bottomRightOutline = bottomRight.subtract(
       new Vec2([this.outlineWidth, this.outlineWidth])
     );
-    console.log("getvertexdata");
     return [
       // 1
       topLeft.x,
@@ -294,4 +294,60 @@ class Line extends GLShape {
 
 export function line(x1: Vec2, x2: Vec2, width: number) {
   return new Line(x1, x2, width);
+}
+
+class Outline extends GLShape {
+  public drawType: DrawType = DrawType.TriangleStrip;
+  public vertices: Vec2[];
+  constructor(
+    _vertices: Array<Vec2 | Vec2Array>,
+    public width: number,
+    public loopEnd = false
+  ) {
+    super();
+    this.vertices = _vertices.map(vec2);
+  }
+
+  setVertex(i: number, val: Vec2Array | Vec2) {
+    this.vertices[i] = vec2(val);
+    return this;
+  }
+
+  pushVertex(val: Vec2Array | Vec2) {
+    this.vertices.push(vec2(val));
+    return this;
+  }
+
+  private vertexAt(i: number) {
+    if (!this.loopEnd) return this.vertices[clamp(i, 0, this.vertices.length)];
+    const idx = i % this.vertices.length;
+    return this.vertices.at(idx)!;
+  }
+
+  getVertexData() {
+    return Array.from(
+      {
+        length: this.vertices.length + (this.loopEnd ? 1 : 0),
+      },
+      (_, i) => {
+        const prev = this.vertexAt(i - 1)!;
+        const cur = this.vertices[i];
+        const next = this.vertexAt(i + 1);
+        const next1 = cur.add(
+          next.subtract(cur).setMagnitude(this.width).rotate90()
+        );
+        const next2 = next1.rotate180();
+        const prev1 = prev.subtract(cur).setMagnitude(this.width).rotate90();
+        const prev2 = prev1.rotate180();
+        return [
+          ...mapVec(prev1.get(), next1.get(), 0.5),
+          ...mapVec(prev2.get(), next2.get(), 0.5),
+        ];
+      }
+    ).flat();
+  }
+}
+
+export function outline(vertices: Vec2Array[], loopEnd: boolean) {
+  return new Outline(vertices, innerWidth, loopEnd);
 }
