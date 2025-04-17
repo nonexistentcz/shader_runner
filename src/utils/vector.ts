@@ -26,8 +26,12 @@ function handleSwizzle(swizzleStr: SwizzleString) {
   return [...swizzleStr].map((dir) => swizzleIndices[dir as Dir]);
 }
 
-export function radians(degrees: number) {
-  return (180 / Math.PI) * degrees;
+export function radians(deg: number) {
+  return (180 / Math.PI) * deg;
+}
+
+export function degrees(rad: number) {
+  return (rad / Math.PI) * 180;
 }
 
 export class Vec4 {
@@ -56,8 +60,105 @@ export function vec4(vector: Vec4Array) {
 export class Vec3 {
   constructor(private val: Vec3Array) {}
 
+  set x(val: number) {
+    this.val[0] = val;
+  }
+  get x() {
+    return this.val[0];
+  }
+  set y(val: number) {
+    this.val[1] = val;
+  }
+  get y() {
+    return this.val[1];
+  }
+  set z(val: number) {
+    this.val[2] = val;
+  }
+  get z() {
+    return this.val[2];
+  }
+
   toVec2() {
     return new Vec2([this.val[0], this.val[1]]);
+  }
+
+  add(other: Vec3) {
+    return new Vec3([this.x + other.x, this.y + other.y, this.z + other.z]);
+  }
+
+  multiply(scalar: number) {
+    return new Vec3([this.x * scalar, this.y * scalar, this.z * scalar]);
+  }
+
+  multiplyElements(other: Vec3) {
+    return new Vec3([this.x * other.x, this.y * other.y, this.z * other.z]);
+  }
+
+  divide(scalar: number) {
+    return new Vec3([this.x / scalar, this.y / scalar, this.z / scalar]);
+  }
+
+  divideElements(other: Vec3) {
+    return new Vec3([this.x / other.x, this.y / other.y, this.z / other.z]);
+  }
+
+  rotateX(angle: number) {
+    return new Vec3([
+      this.x,
+      this.y * Math.cos(angle) - this.y * Math.sin(angle),
+      this.y * Math.sin(angle) + this.z * Math.cos(angle),
+    ]);
+  }
+
+  rotateY(angle: number) {
+    return new Vec3([
+      this.x * Math.cos(angle) + this.z * Math.sin(angle),
+      this.y,
+      -this.x * Math.sin(angle) + this.z * Math.cos(angle),
+    ]);
+  }
+
+  rotateZ(angle: number) {
+    return new Vec3([
+      this.x * Math.cos(angle) - this.y * Math.sin(angle),
+      this.x * Math.sin(angle) + this.y * Math.cos(angle),
+      this.z,
+    ]);
+  }
+
+  rotate(yaw: number, pitch: number, roll: number) {
+    return new Vec3([
+      this.x * Math.cos(pitch) * Math.cos(roll) +
+        this.y *
+          (Math.sin(yaw) * Math.sin(pitch) * Math.cos(roll) -
+            Math.cos(yaw) * Math.sin(roll)) +
+        this.z *
+          (Math.cos(yaw) * Math.sin(pitch) * Math.cos(roll) +
+            Math.sin(yaw) * Math.sin(roll)),
+      this.x * Math.cos(pitch) * Math.sin(roll) +
+        this.y *
+          (Math.sin(yaw) * Math.sin(pitch) * Math.sin(roll) +
+            Math.cos(yaw) * Math.cos(roll)) +
+        this.z *
+          (Math.cos(yaw) * Math.sin(pitch) * Math.sin(roll) -
+            Math.sin(yaw) * Math.cos(roll)),
+      -this.x * Math.sin(pitch) +
+        this.y * Math.sin(yaw) * Math.cos(pitch) +
+        this.z * Math.sin(yaw) * Math.cos(pitch),
+    ]);
+  }
+
+  rotate90X() {
+    return new Vec3([this.x, this.z, -this.y]);
+  }
+
+  rotate90Y() {
+    return new Vec3([-this.z, this.y, this.x]);
+  }
+
+  rotate90Z() {
+    return new Vec3([-this.y, this.x, this.z]);
   }
 
   map(fn: MapFn, thisArg: any) {
@@ -115,12 +216,36 @@ export class Vec2 {
     ]);
   }
 
+  rotate90() {
+    return new Vec2([this.y, -this.x]);
+  }
+
+  rotate180() {
+    return new Vec2([-this.x, -this.y]);
+  }
+
+  rotate270() {
+    return new Vec2([-this.y, -this.x]);
+  }
+
   angle() {
-    return Math.atan2(this.x, this.y);
+    return Math.atan2(this.y, this.x);
+  }
+
+  degrees() {
+    return degrees(this.angle());
+  }
+
+  radians() {
+    return this.angle();
   }
 
   angleTo(other: Vec2) {
-    return Math.atan2(other.x - this.x, other.y - this.y);
+    return Math.atan2(other.y - this.y, other.x - this.x);
+  }
+
+  distanceTo(other: Vec2) {
+    return other.subtract(this).magnitude();
   }
 
   setAngle(angle: number) {
@@ -135,12 +260,20 @@ export class Vec2 {
     return new Vec2([this.x - other.x, this.y - other.y]);
   }
 
-  multiply(val: number) {
-    return new Vec2([this.x * val, this.y * val]);
+  multiply(scalar: number) {
+    return new Vec2([this.x * scalar, this.y * scalar]);
   }
 
-  divide(val: number) {
-    return new Vec2([this.x / val, this.y / val]);
+  multiplyElements(other: Vec2) {
+    return new Vec2([this.x * other.x, this.y * other.y]);
+  }
+
+  divide(scalar: number) {
+    return new Vec2([this.x / scalar, this.y / scalar]);
+  }
+
+  divideElements(other: Vec2) {
+    return new Vec2([this.x / other.x, this.y / other.y]);
   }
 
   magnitude() {
@@ -152,6 +285,7 @@ export class Vec2 {
     const magnitude = this.magnitude();
     this.x = (this.x / magnitude) * val;
     this.y = (this.y / magnitude) * val;
+    return this;
   }
 
   withMagnitude(val: number) {
@@ -163,6 +297,10 @@ export class Vec2 {
     return this.x * other.x + this.y * other.y;
   }
 
+  cross(other: Vec2) {
+    return this.x * other.y - this.y * other.x;
+  }
+
   normalize() {
     return this.withMagnitude(1);
   }
@@ -172,6 +310,22 @@ export class Vec2 {
   }
 }
 
-export function vec2(vector: Vec2Array) {
+export function vec2(vector: Vec2Array | Vec2) {
+  if (vector instanceof Vec2) return vector;
   return new Vec2(vector);
+}
+
+export function intersectionLineLine(
+  aStart: Vec2Array | Vec2,
+  aVec: Vec2Array | Vec2,
+  bStart: Vec2Array | Vec2,
+  bVec: Vec2Array | Vec2
+) {
+  const aStartV = vec2(aStart);
+  const aVecV = vec2(aVec);
+  const bVecV = vec2(bVec);
+  const x = vec2(bStart).subtract(aStartV);
+  const cross = aVecV.cross(bVecV);
+  const t = x.cross(bVecV) / cross;
+  return aStartV.add(aVecV.multiply(t));
 }
