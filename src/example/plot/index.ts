@@ -1,4 +1,4 @@
-import { Runner, toCoords } from "../runner";
+import { Runner, toClipCoords } from "../runner";
 import { line } from "../../shapes";
 import { vec2 } from "../../utils/vector";
 import { BOUNDING_BOX, NONEX } from "../common";
@@ -18,8 +18,8 @@ function usePlot(shapes: Line[]) {
 function initPlot(fn: (x: number) => number) {
   const shapes = Array.from({ length: precision }, (_, i) =>
     line(
-      toCoords(vec2([i / precision, fn(i / precision)])),
-      toCoords(vec2([(i + 1) / precision, fn((i + 1) / precision)])),
+      toClipCoords(vec2([i / precision, fn(i / precision)])),
+      toClipCoords(vec2([(i + 1) / precision, fn((i + 1) / precision)])),
       0.01
     )
   );

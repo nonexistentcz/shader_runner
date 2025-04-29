@@ -7,7 +7,7 @@ import { GLShader } from "../shader";
 import { GLUniformValue, uniform1f, uniform2fv, uniform3fv } from "../uniform";
 import { GLShape } from "../shapes";
 
-export function toCoords(vec: Vec2) {
+export function toClipCoords(vec: Vec2) {
   return new Vec2([vec.x * 2 - 1, vec.y * 2 - 1]);
 }
 
@@ -116,7 +116,7 @@ export class Runner {
     this.canvas.el.addEventListener("mousemove", (e) => {
       const res = new Vec2(this.uResolution.value);
       const uv = new Vec2([e.x, e.y]).divideElements(res);
-      const coords = toCoords(new Vec2([uv.x, 1 - uv.y]));
+      const coords = toClipCoords(new Vec2([uv.x, 1 - uv.y]));
       const aspectRatio = res.x / res.y;
       const mouseCoords = new Vec2([coords.x * aspectRatio, coords.y]).divide(
         0.9
