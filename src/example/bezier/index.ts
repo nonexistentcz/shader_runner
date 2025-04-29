@@ -6,15 +6,16 @@ import { Runner } from "../runner";
 
 const runner = new Runner();
 const points = [
-  circle(0.008, 20).setCenter(vec3([-0.8, -0.8, 0])),
-  circle(0.008, 20).setCenter(vec3([0.8, -0.8, 0])),
-  circle(0.008, 20).setCenter(vec3([-0.8, 0.8, 0])),
-  circle(0.008, 20).setCenter(vec3([0.8, 0.8, 0])),
+  circle(0.004, 20).setCenter(vec3([-0.8, -0.8, 0])),
+  circle(0.004, 20).setCenter(vec3([0.8, -0.8, 0])),
+  circle(0.004, 20).setCenter(vec3([-0.8, 0.8, 0])),
+  circle(0.004, 20).setCenter(vec3([0.8, 0.8, 0])),
 ];
 let lines: GLShape[] | undefined = undefined;
 
-let selected: GLShape | undefined;
+let selected: number = -1;
 const DISTANCE = 0.2;
+const SEGMENT_COUNT = 40;
 
 function cubic(t: number) {
   return cubicBezier(
@@ -26,17 +27,15 @@ function cubic(t: number) {
   );
 }
 
-function mix(t: number) {
-  return points[0].center
-    .toVec2()
-    .multiply(t)
-    .add(points[3].center.toVec2().multiply(1 - t));
-}
+const pointLines = [
+  line(points[0].center.toVec2(), points[1].center.toVec2(), 0.001),
+  line(points[2].center.toVec2(), points[3].center.toVec2(), 0.001),
+];
 
 function createCubicArray() {
-  return Array.from({ length: 20 }, (_, i) => [
-    circle(0.007, 5).setCenter(cubic(i / 20).toVec3()),
-    line(cubic(i / 20), cubic((i + 1) / 20), 0.004),
+  return Array.from({ length: SEGMENT_COUNT }, (_, i) => [
+    circle(0.004, 5).setCenter(cubic(i / SEGMENT_COUNT).toVec3()),
+    line(cubic(i / SEGMENT_COUNT), cubic((i + 1) / SEGMENT_COUNT), 0.002),
   ]).flat();
 }
 
@@ -50,16 +49,28 @@ export default async function init() {
   await runner.init();
   runner.useShape(BOUNDING_BOX);
   runner.use(points);
+  runner.use(pointLines);
   runner.setClearColor(NONEX.get());
-  runner.onMouseMove((coords) => selected?.setCenter(coords.toVec3()));
+  runner.onMouseMove((coords) => {
+    if (selected === -1) return;
+    points[selected].setCenter(coords.toVec3());
+    const selectedLine = pointLines[Math.floor(selected / 2)];
+    if (selected % 2 === 1) {
+      selectedLine.setEnd(coords);
+    } else {
+      selectedLine.setStart(coords);
+    }
+    selectedLine.updateBuffers();
+    updateLines();
+  });
   const canvasEl = runner.getCanvas().el;
   canvasEl.addEventListener("mousedown", () => {
-    selected = points.find(
+    selected = points.findIndex(
       (point) => point.center.toVec2().distanceTo(runner.mouse) < DISTANCE
     );
   });
   updateLines();
-  canvasEl.addEventListener("mouseup", () => (selected = undefined));
+  canvasEl.addEventListener("mouseup", () => (selected = -1));
   runner.onMouseMove(() => {
     if (selected) updateLines();
   });
