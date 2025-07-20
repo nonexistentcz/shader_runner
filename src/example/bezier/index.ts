@@ -1,4 +1,4 @@
-import { circle, GLShape, line } from "../../shapes";
+import { circle, GLShape, line } from "../../render/shapes";
 import { cubicBezier } from "../../utils/ease";
 import { vec3 } from "../../utils/vector";
 import { BOUNDING_BOX, NONEX } from "../common";

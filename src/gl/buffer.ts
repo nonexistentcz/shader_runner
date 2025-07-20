@@ -1,4 +1,4 @@
-import { BufferType } from "./enums";
+import { BufferType } from "./web-gl-enums";
 
 type SetDataOptions = {
   usage?: GLenum;

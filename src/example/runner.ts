@@ -1,11 +1,11 @@
-import { getCanvas, GLCanvas } from "../canvas";
-import { GL2 } from "../gl";
+import { getCanvas, GLCanvas } from "../gl";
+import { GL2Wrapper } from "../gl/wrapper";
 import { Vec2, Vec4Array } from "../utils/vector";
-import { BufferType, ShaderType } from "../enums";
-import { GLProgram } from "../program";
-import { GLShader } from "../shader";
-import { GLUniformValue, uniform1f, uniform2fv, uniform3fv } from "../uniform";
-import { GLShape } from "../shapes";
+import { BufferType, ShaderType } from "../gl/web-gl-enums";
+import { GLProgram } from "../gl";
+import { GLShader } from "../gl";
+import { GLUniformValue, uniform1f, uniform2fv, uniform3fv } from "../gl";
+import { GLShape } from "../render/shapes";
 
 export function toClipCoords(vec: Vec2) {
   return new Vec2([vec.x * 2 - 1, vec.y * 2 - 1]);
@@ -14,7 +14,7 @@ export function toClipCoords(vec: Vec2) {
 type UIEventHandler = (coords: Vec2, e: UIEvent) => unknown;
 
 export class Runner {
-  private gl: GL2;
+  private gl: GL2Wrapper;
   private canvas: GLCanvas;
   private program: GLProgram;
   private shaders = new Map<string, GLShader>();

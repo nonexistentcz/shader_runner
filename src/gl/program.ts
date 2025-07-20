@@ -1,6 +1,6 @@
-import { ShaderType } from "./enums";
-import { GLShader } from "./shader";
-import { GLUniform, GLUniformValue } from "./uniform";
+import { ShaderType } from ".";
+import { GLShader } from ".";
+import { GLUniform, GLUniformValue } from ".";
 
 export class GLProgram {
   private fragmentShader: GLShader | null = null;

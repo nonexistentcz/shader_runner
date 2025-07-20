@@ -1,5 +1,5 @@
 import { Runner, toClipCoords } from "../runner";
-import { line } from "../../shapes";
+import { line } from "../../render/shapes";
 import { vec2 } from "../../utils/vector";
 import { BOUNDING_BOX, NONEX } from "../common";
 

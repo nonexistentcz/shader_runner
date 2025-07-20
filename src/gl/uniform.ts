@@ -1,4 +1,4 @@
-import { Vec2Array, Vec3Array, Vec4Array } from "./utils/vector";
+import { Vec2Array, Vec3Array, Vec4Array } from "../utils";
 
 export function uniform1f(name: string, value: number) {
   return new GLUniformValue(name, value, function (gl, location) {

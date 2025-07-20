@@ -1,16 +1,20 @@
-import { BufferType, ClearBuffer, EnableFlags, ShaderType } from "./enums";
+import {
+  BufferType,
+  ClearBuffer,
+  EnableFlags,
+  ShaderType,
+} from "./web-gl-enums";
 import { GLProgram } from "./program";
-import { GLShader } from "./shader";
-import { GLBuffer } from "./buffer";
-import { Vec4Array } from "./utils/vector";
+import { GLBuffer, GLShader } from ".";
+import { Vec4Array } from "../utils/vector";
 
-export class GL2 {
-  private static instance: GL2 | null = null;
+export class GL2Wrapper {
+  private static instance: GL2Wrapper | null = null;
 
   public gl: WebGL2RenderingContext;
 
   private constructor(public canvas: HTMLCanvasElement) {
-    if (GL2.instance) {
+    if (GL2Wrapper.instance) {
       throw new Error("gl can only be instantiated once");
     }
 
@@ -20,8 +24,8 @@ export class GL2 {
   }
 
   static getInstance(canvas: HTMLCanvasElement) {
-    if (GL2.instance) return GL2.instance;
-    return new GL2(canvas);
+    if (GL2Wrapper.instance) return GL2Wrapper.instance;
+    return new GL2Wrapper(canvas);
   }
 
   createProgram() {

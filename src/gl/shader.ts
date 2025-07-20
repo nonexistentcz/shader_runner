@@ -1,5 +1,5 @@
-import { ShaderType } from "./enums";
-import { GLShaderSource } from "./shaderSource";
+import { ShaderType } from ".";
+import { GLShaderSource } from "../transformer";
 
 type TransformFn = (source: GLShaderSource) => GLShaderSource;
 

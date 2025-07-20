@@ -1,31 +1,33 @@
-import { getCanvas } from "./canvas";
-import { GLShaderSource } from "./shaderSource";
-import { uniform3f } from "./uniform";
+import { getCanvas } from "./gl";
+import { GLShaderSource } from "./transformer/shaderSource";
+import { uniform3f } from "./gl";
+import { unitMatrix } from "./utils";
 
-function texturePass(fn: any, options?: any) {}
-function drawPass(fn: any, options?: any) {}
-function effectPass(fn: any, options?: any) {}
-function effectChannel(fn: any): any {}
+function empty(_fn: any, _options?: any) {}
+const texturePass = empty;
+const drawPass = empty;
+const effectPass = empty;
+const effectChannel = empty;
 
 const canvas = getCanvas();
 
-const texture = texturePass((pass: any) => {
-  return pass
+const texture = texturePass((pass: any) =>
+  pass
     .fragShader("main.frag")
     .fragShader("main.vert")
-    .uniform(uniform3f("u_Color", [1, 1, 1]));
-});
+    .uniform(uniform3f("u_Color", [1, 1, 1]))
+);
 
 const uColor = uniform3f("u_Color", [1, 1, 1]);
 
-const main = drawPass((pass: any) => {
-  return pass
+const main = drawPass((pass: any) =>
+  pass
     .fragShader("main.frag")
     .vertShader("main.vert")
     .texture2D("texMyTexture", texture, false)
     .uniform(uColor)
-    .mvp([]);
-});
+    .mvp(unitMatrix(4, 4))
+);
 
 const blur = effectPass("effects.frag", {
   entryPoint: "gaussianBlur",

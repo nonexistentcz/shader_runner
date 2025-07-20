@@ -1,4 +1,4 @@
-import { ring, rectangle } from "../../shapes";
+import { ring, rectangle } from "../../render/shapes";
 import { vec2, vec3 } from "../../utils/vector";
 import { SHAPE_SIZE, Shape } from ".";
 

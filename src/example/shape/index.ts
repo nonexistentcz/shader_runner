@@ -1,4 +1,4 @@
-import { outline } from "../../shapes";
+import { outline } from "../../render/shapes";
 import { Runner } from "../runner";
 
 const runner = new Runner();

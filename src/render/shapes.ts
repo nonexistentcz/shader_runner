@@ -1,6 +1,6 @@
-import { Buffers, GLBuffer } from "./buffer";
-import { clamp, mapVec } from "./utils/ease";
-import { vec2, Vec2, Vec2Array, vec3, Vec3 } from "./utils/vector";
+import { Buffers, GLBuffer } from "../gl/buffer";
+import { clamp, mapVec } from "../utils/ease";
+import { vec2, Vec2, Vec2Array, vec3, Vec3 } from "../utils/vector";
 
 export enum DrawType {
   Points = WebGL2RenderingContext.POINTS,

@@ -1,4 +1,4 @@
-import { GLTransformer } from "./transformer/transformer";
+import { GLTransformer } from "./types";
 
 export class GLShaderSource {
   private transformers: Array<GLTransformer> = [];

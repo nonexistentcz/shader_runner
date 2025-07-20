@@ -1,4 +1,4 @@
-import { rectangle } from "../shapes";
+import { rectangle } from "../render/shapes";
 import { vec4 } from "../utils/vector";
 
 export const BOUNDING_BOX = rectangle(200, 200, 99);

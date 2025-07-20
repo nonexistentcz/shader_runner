@@ -1,5 +1,5 @@
 import { Runner } from "../runner";
-import { circle, line } from "../../shapes";
+import { circle, line } from "../../render/shapes";
 import { intersectionLineLine, vec2 } from "../../utils/vector";
 import { BOUNDING_BOX, NONEX } from "../common";
 

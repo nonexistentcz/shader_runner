@@ -1,5 +1,5 @@
 import { Runner } from "../runner";
-import { line } from "../../shapes";
+import { line } from "../../render/shapes";
 import { map } from "../../utils/ease";
 import { vec2, vec4 } from "../../utils/vector";
 import { randomMapped } from "../shapes/shape";

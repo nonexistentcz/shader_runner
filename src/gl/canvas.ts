@@ -1,5 +1,5 @@
-import { debounce } from "./utils/debounce";
-import { GL2 } from "./gl";
+import { debounce } from "../utils";
+import { GL2Wrapper } from ".";
 
 export const defaultId = "opengl-runner";
 function getCanvasElement(id: string) {
@@ -62,7 +62,7 @@ export class GLCanvas {
   }
 
   getGl() {
-    return GL2.getInstance(this._el);
+    return GL2Wrapper.getInstance(this._el);
   }
 }
 
