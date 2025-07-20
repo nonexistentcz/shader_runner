@@ -1,6 +1,6 @@
-import { Buffers, GLBuffer } from "../gl/buffer";
-import { clamp, mapVec } from "../utils/ease";
 import { vec2, Vec2, Vec2Array, vec3, Vec3 } from "../utils/vector";
+import { Buffers, GLBuffer } from "../gl";
+import { clamp, mapVec } from "../utils";
 
 export enum DrawType {
   Points = WebGL2RenderingContext.POINTS,
@@ -319,12 +319,15 @@ class Outline extends GLShape {
   }
 
   private vertexAt(i: number) {
-    if (!this.loopEnd) return this.vertices[clamp(i, 0, this.vertices.length)];
+    if (!this.loopEnd)
+      return this.vertices[clamp(i, 0, this.vertices.length - 1)];
     const idx = i % this.vertices.length;
     return this.vertices.at(idx)!;
   }
 
   getVertexData() {
+    if (this.vertices.length <= 1) return [];
+
     return Array.from(
       {
         length: this.vertices.length + (this.loopEnd ? 1 : 0),
@@ -348,6 +351,10 @@ class Outline extends GLShape {
   }
 }
 
-export function outline(vertices: Vec2Array[], loopEnd: boolean) {
-  return new Outline(vertices, innerWidth, loopEnd);
+export function outline(
+  vertices: Vec2Array[],
+  width: number,
+  loopEnd: boolean
+) {
+  return new Outline(vertices, width, loopEnd);
 }
