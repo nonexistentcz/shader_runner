@@ -1,6 +1,6 @@
 import { circle, GLShape, line } from "../../render/shapes";
-import { cubicBezier } from "../../utils/ease";
-import { vec3 } from "../../utils/vector";
+import { cubicBezier } from "../../utils";
+import { vec3 } from "../../utils";
 import { BOUNDING_BOX, NONEX } from "../common";
 import { Runner } from "../runner";
 

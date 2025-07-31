@@ -1,6 +1,6 @@
 import { vec2, Vec2, Vec2Array, vec3, Vec3 } from "../utils/vector";
 import { Buffers, GLBuffer } from "../gl";
-import { clamp, mapVec } from "../utils";
+import { clamp, mapVec, Matrix4x4 } from "../utils";
 
 export enum DrawType {
   Points = WebGL2RenderingContext.POINTS,
@@ -13,8 +13,8 @@ export enum DrawType {
 }
 
 interface Shape {
-  // TODO: implement using matrices
   center: Vec3;
+  rotation: Vec3;
   drawType: DrawType;
 
   get vertexCount(): number;
@@ -22,6 +22,7 @@ interface Shape {
   get indexBuffer(): GLBuffer | undefined;
 
   getVertexData(): number[];
+  getTransformationMatrix(): Matrix4x4;
 }
 
 export class GLShape implements Shape {
@@ -30,6 +31,7 @@ export class GLShape implements Shape {
   public drawType = DrawType.Triangles;
   public _vertexCount = 0;
   public center: Vec3 = vec3([0, 0, 0]);
+  public rotation: Vec3 = vec3([0, 0, 0]);
 
   get vertexBuffer() {
     return this._vertexBuffer;
@@ -63,6 +65,12 @@ export class GLShape implements Shape {
     );
     this._vertexCount = vertices.length / 3;
     return this;
+  }
+
+  getTransformationMatrix() {
+    return Matrix4x4.unit()
+      .rotate(...this.rotation.get())
+      .translate(...this.center.get());
   }
 
   getVertexData(): number[] {

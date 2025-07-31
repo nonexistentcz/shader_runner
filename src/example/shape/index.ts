@@ -6,7 +6,7 @@ const runner = new Runner();
 const shape = outline([], 0.1, false);
 
 export default async function init() {
-  runner.init();
+  await runner.init();
   runner.useShape(shape);
   runner.setClearColor(NONEX.get());
   runner.getCanvas().el.addEventListener("click", () => {

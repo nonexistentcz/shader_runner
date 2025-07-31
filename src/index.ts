@@ -7,8 +7,8 @@ import initBezier from "./example/bezier";
 import initOutline from "./example/shape";
 
 // initBalls();
-// init Graph();
+// initGraph();
 // initIntersection();
-// initPlot((x) => smoothstep(0, 1, x * 3 - 1));
-initBezier();
-// initOutline();
+// initPlot((x) => Math.sin(x * (2 * Math.PI)) / 5 + 0.5);
+// initBezier();
+initOutline();

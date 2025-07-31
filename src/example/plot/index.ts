@@ -18,9 +18,17 @@ function usePlot(shapes: Line[]) {
 function initPlot(fn: (x: number) => number) {
   const shapes = Array.from({ length: precision }, (_, i) =>
     line(
-      toClipCoords(vec2([i / precision, fn(i / precision)])),
-      toClipCoords(vec2([(i + 1) / precision, fn((i + 1) / precision)])),
-      0.01
+      toClipCoords(
+        vec2([i / precision, fn(i / precision)])
+          .multiply(0.8)
+          .add(vec2([0.1, 0.1]))
+      ),
+      toClipCoords(
+        vec2([(i + 1) / precision, fn((i + 1) / precision)])
+          .multiply(0.8)
+          .add(vec2([0.1, 0.1]))
+      ),
+      0.001
     )
   );
   usePlot(shapes);

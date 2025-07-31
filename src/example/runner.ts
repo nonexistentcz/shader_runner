@@ -1,11 +1,12 @@
-import { getCanvas, GLCanvas } from "../gl";
+import { getCanvas, GLCanvas, uniform4x4 } from "../gl";
 import { GL2Wrapper } from "../gl/wrapper";
 import { Vec2, Vec4Array } from "../utils/vector";
 import { BufferType, ShaderType } from "../gl/web-gl-enums";
 import { GLProgram } from "../gl";
 import { GLShader } from "../gl";
-import { GLUniformValue, uniform1f, uniform2fv, uniform3fv } from "../gl";
+import { GLUniformValue, uniform1f, uniform2fv } from "../gl";
 import { GLShape } from "../render/shapes";
+import { Matrix4x4 } from "../utils";
 
 export function toClipCoords(vec: Vec2) {
   return new Vec2([vec.x * 2 - 1, vec.y * 2 - 1]);
@@ -20,7 +21,7 @@ export class Runner {
   private shaders = new Map<string, GLShader>();
   private shapes: GLShape[] = [];
   // TODO: implement with matrices
-  private uShapePos = uniform3fv("u_ShapePos", [0, 0, 0]);
+  private uTransform = uniform4x4("u_Transform", Matrix4x4.unit());
   private uResolution = uniform2fv("u_Resolution", [0, 0]);
   private uMouse = uniform2fv("u_Mouse", [0, 0]);
   private uTime = uniform1f("u_Time", 0);
@@ -110,7 +111,7 @@ export class Runner {
     await this.loadShader(fragmentShaderUrl, ShaderType.Fragment);
     await this.loadShader(vertexShaderUrl, ShaderType.Vertex);
     this.prepareProgram();
-    this.use([this.uShapePos, this.uMouse, this.uResolution, this.uTime]);
+    this.use([this.uTransform, this.uMouse, this.uResolution, this.uTime]);
     this.adjustSizeAndViewport();
     this.canvas.onResize(() => this.adjustSizeAndViewport());
     this.canvas.el.addEventListener("mousemove", (e) => {
@@ -141,7 +142,11 @@ export class Runner {
   }
 
   private drawShape(shape: GLShape) {
-    this.uShapePos.update(shape.center.get());
+    this.uTransform.update(
+      Matrix4x4.rotation(...shape.rotation.get()).translate(
+        ...shape.center.get()
+      )
+    );
     this.gl.withBufferBind(
       () => {
         this.program
