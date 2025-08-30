@@ -2,11 +2,13 @@ import {
   BufferType,
   ClearBuffer,
   EnableFlags,
+  FrameBufferType,
   ShaderType,
 } from "./web-gl-enums";
 import { GLProgram } from "./program";
 import { GLBuffer, GLShader } from ".";
 import { Vec4Array } from "../utils/vector";
+import { GLFramebuffer } from "./framebuffer";
 
 export class GL2Wrapper {
   private static instance: GL2Wrapper | null = null;
@@ -69,6 +71,15 @@ export class GL2Wrapper {
     buffers.forEach((buffer) => buffer?.bind());
     fn();
     buffers.forEach((buffer) => buffer?.unbind());
+  }
+
+  createFramebuffer(bufferType: FrameBufferType) {
+    return new GLFramebuffer(this.gl, this.gl.createFramebuffer(), bufferType);
+  }
+
+  deleteFramebuffer(framebuffer: GLFramebuffer) {
+    this.gl.deleteFramebuffer(framebuffer.getBuffer());
+    return this;
   }
 
   setClearColor([r, g, b, a]: Vec4Array) {

@@ -29,3 +29,8 @@ export enum BufferType {
   Array = CTX.ARRAY_BUFFER,
   Vertex = CTX.ARRAY_BUFFER,
 }
+
+export enum FrameBufferType {
+  FrameBuffer = CTX.FRAMEBUFFER,
+  DrawFrameBuffer = CTX.DRAW_FRAMEBUFFER,
+}
