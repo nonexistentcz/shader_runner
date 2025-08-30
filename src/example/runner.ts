@@ -1,6 +1,6 @@
 import { getCanvas, GLCanvas, uniform4x4 } from "../gl";
 import { GL2Wrapper } from "../gl/wrapper";
-import { Vec2, Vec4Array } from "../utils/vector";
+import { Vec2, Vec3, Vec4Array } from "../utils/vector";
 import { BufferType, ShaderType } from "../gl/web-gl-enums";
 import { GLProgram } from "../gl";
 import { GLShader } from "../gl";
@@ -14,18 +14,25 @@ export function toClipCoords(vec: Vec2) {
 
 type UIEventHandler = (coords: Vec2, e: UIEvent) => unknown;
 
-export class Runner {
+type RunnerShape<T> = {
+  shape: GLShape;
+  props?: T;
+};
+
+type BeforeDraw<TProps> = (props?: TProps) => void;
+
+export class Runner<TProps> {
   private gl: GL2Wrapper;
   private canvas: GLCanvas;
   private program: GLProgram;
   private shaders = new Map<string, GLShader>();
-  private shapes: GLShape[] = [];
-  // TODO: implement with matrices
+  private shapes: RunnerShape<TProps>[] = [];
   private uTransform = uniform4x4("u_Transform", Matrix4x4.unit());
   private uResolution = uniform2fv("u_Resolution", [0, 0]);
   private uMouse = uniform2fv("u_Mouse", [0, 0]);
   private uTime = uniform1f("u_Time", 0);
   private mouseMoveHandlers: Array<UIEventHandler> = [];
+  private beforeDraw?: BeforeDraw<TProps>;
 
   constructor(canvasId?: string) {
     this.canvas = getCanvas(canvasId);
@@ -51,30 +58,37 @@ export class Runner {
       else if (value instanceof GLUniformValue) this.useUniform(value);
       else if (value instanceof GLShape) this.useShape(value);
     });
+    return this;
   }
 
   useShader(shader: GLShader) {
     this.program.attachShader(shader);
+    return this;
   }
 
   useUniform<T>(uniform: GLUniformValue<T>) {
     return this.program.useUniform(uniform);
   }
 
-  useShape(shape: GLShape) {
+  useShape(shape: GLShape, props?: TProps) {
     shape.bind({
       vertex: this.gl.createBuffer(BufferType.Vertex),
       index: this.gl.createBuffer(BufferType.Index),
     });
 
-    this.shapes.push(shape);
+    this.shapes.push({ shape, props });
+    return this;
+  }
+
+  useBeforeDraw(beforeDraw: BeforeDraw<TProps>) {
+    this.beforeDraw = beforeDraw;
     return this;
   }
 
   removeShape(shape: GLShape) {
     if (shape.vertexBuffer) this.gl.deleteBuffer(shape.vertexBuffer);
     if (shape.indexBuffer) this.gl.deleteBuffer(shape.indexBuffer);
-    const index = this.shapes.indexOf(shape);
+    const index = this.shapes.findIndex((glShape) => glShape.shape === shape);
     if (index >= 0) this.shapes.splice(index, 1);
     return this;
   }
@@ -134,19 +148,26 @@ export class Runner {
 
   clear() {
     this.gl.clear();
+    return this;
   }
 
   draw(time = 0) {
     this.uTime.update(time);
     this.shapes.forEach(this.drawShape, this);
+    return this;
   }
 
-  private drawShape(shape: GLShape) {
+  private drawShape({ shape, props }: RunnerShape<TProps>) {
     this.uTransform.update(
       Matrix4x4.rotation(...shape.rotation.get()).translate(
         ...shape.center.get()
       )
     );
+
+    if (this.beforeDraw) {
+      this.beforeDraw(props);
+    }
+
     this.gl.withBufferBind(
       () => {
         this.program
