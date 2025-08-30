@@ -9,6 +9,7 @@
     "dev:build": "webpack --mode development",
     "ts:build": "tsc",
     "ts:watch": "tsc --watch",
+    "ts:check": "tsc --watch --noEmit",
     "dev": "webpack serve --open --mode development",
     "start": "tsc && http-server -p 3000"
   },
@@ -16,20 +17,23 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^22.14.0",
+    "@types/node": "^24.3.0",
     "@types/webpack": "^5.28.5",
     "css-loader": "^7.1.2",
-    "html-webpack-plugin": "^5.6.3",
+    "html-webpack-plugin": "^5.6.4",
     "http-server": "^14.1.1",
     "raw-loader": "^4.0.2",
-    "sass": "^1.86.1",
+    "sass": "^1.91.0",
     "sass-loader": "^16.0.5",
     "style-loader": "^4.0.0",
-    "ts-loader": "^9.5.2",
+    "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2",
-    "webpack": "^5.98.0",
+    "typescript": "^5.9.2",
+    "webpack": "^5.101.0",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.1"
+    "webpack-dev-server": "^5.2.2"
+  },
+  "dependencies": {
+    "color-convert": "^3.1.0"
   }
 }
