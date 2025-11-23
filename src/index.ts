@@ -12,5 +12,5 @@ import initColor from "./example/color";
 // initIntersection();
 // initPlot((x) => Math.sin(x * (2 * Math.PI)) / 5 + 0.5);
 // initBezier();
-// initOutline();
-initColor();
+initOutline();
+// initColor();

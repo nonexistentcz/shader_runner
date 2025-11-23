@@ -176,7 +176,7 @@ export class Runner<TProps> {
           .setPointer(3, WebGL2RenderingContext.FLOAT, false, 0, 0);
         this.gl.gl.drawElements(
           shape.drawType,
-          shape._vertexCount,
+          shape.vertexCount,
           this.gl.gl.UNSIGNED_SHORT,
           0
         );

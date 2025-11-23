@@ -140,16 +140,25 @@ export function intersectionLineLine(
   bStart: Vec2Union,
   bVec: Vec2Union
 ) {
-  const aStartV = vec2(aStart);
-  const aVecV = vec2(aVec);
-  const bVecV = vec2(bVec);
-  const x = vec2(bStart).subtract(aStartV);
-  const cross = aVecV.cross(bVecV);
-  const t = x.cross(bVecV) / cross;
-  return aStartV.add(aVecV.multiply(t));
+  const _aStart = vec2(aStart);
+  const _aVec = vec2(aVec);
+  const _bVec = vec2(bVec);
+
+  const x = vec2(bStart).subtract(_aStart);
+  const cross = _aVec.cross(_bVec);
+  const t = x.cross(_bVec) / cross;
+
+  return _aStart.add(_aVec.multiply(t));
 }
 
 export type Vec2Union = Vec2 | Vec2Array;
 export function resolveVec2(vec: Vec2Union) {
   return vec instanceof Vec2 ? vec.get() : vec;
+}
+
+export function bevelLine(start: Vec2Union, vec: Vec2Union, offset: number) {
+  const _start = vec2(start);
+  const _vec = vec2(vec);
+  const bevel = vec2(_vec).rotate90().setMagnitude(offset);
+  return [_start.add(bevel), _start.subtract(bevel)];
 }

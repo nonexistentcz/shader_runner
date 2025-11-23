@@ -1,4 +1,13 @@
-import { vec2, Vec2, Vec2Array, vec3, Vec3 } from "../utils/vector";
+import {
+  bevelLine,
+  intersectionLineLine,
+  vec2,
+  Vec2,
+  Vec2Array,
+  Vec2Union,
+  vec3,
+  Vec3,
+} from "../utils/vector";
 import { Buffers, GLBuffer } from "../gl";
 import { clamp, mapVec, Matrix4x4 } from "../utils";
 
@@ -29,7 +38,7 @@ export class GLShape implements Shape {
   protected _vertexBuffer?: GLBuffer;
   protected _indexBuffer?: GLBuffer;
   public drawType = DrawType.Triangles;
-  public _vertexCount = 0;
+  private _vertexCount = 0;
   public center: Vec3 = vec3([0, 0, 0]);
   public rotation: Vec3 = vec3([0, 0, 0]);
 
@@ -261,12 +270,12 @@ class Line extends GLShape {
     super();
   }
 
-  setStart(start: Vec2Array | Vec2) {
+  setStart(start: Vec2Union) {
     this.x1 = vec2(start);
     return this;
   }
 
-  setEnd(end: Vec2Array | Vec2) {
+  setEnd(end: Vec2Union) {
     this.x2 = vec2(end);
     return this;
   }
@@ -304,11 +313,53 @@ export function line(x1: Vec2, x2: Vec2, width: number) {
   return new Line(x1, x2, width);
 }
 
+class Polygon extends GLShape {
+  public drawType: DrawType = DrawType.TriangleFan;
+  public vertices: Vec2[];
+
+  constructor(_vertices: Array<Vec2Union>, public loopEnd = false) {
+    super();
+    this.vertices = _vertices.map(vec2);
+  }
+
+  setVertex(i: number, val: Vec2Union) {
+    this.vertices[i] = vec2(val);
+    return this;
+  }
+
+  pushVertex(val: Vec2Union) {
+    this.vertices.push(vec2(val));
+    return this;
+  }
+
+  private vertexAt(i: number) {
+    if (!this.loopEnd)
+      return this.vertices[clamp(i, 0, this.vertices.length - 1)];
+    const idx = i % this.vertices.length;
+    return this.vertices.at(idx)!;
+  }
+
+  getVertexData() {
+    const data = Array.from(
+      {
+        length: this.vertices.length + (this.loopEnd ? 1 : 0),
+      },
+      (_, i) => this.vertexAt(i).toVec3().get()
+    ).flat();
+    console.log(data);
+    return data;
+  }
+}
+
+export function polygon(vertices: Vec2Array[], loopEnd = false) {
+  return new Polygon(vertices, loopEnd);
+}
+
 class Outline extends GLShape {
   public drawType: DrawType = DrawType.TriangleStrip;
   public vertices: Vec2[];
   constructor(
-    _vertices: Array<Vec2 | Vec2Array>,
+    _vertices: Array<Vec2Union>,
     public width: number,
     public loopEnd = false
   ) {
@@ -316,12 +367,12 @@ class Outline extends GLShape {
     this.vertices = _vertices.map(vec2);
   }
 
-  setVertex(i: number, val: Vec2Array | Vec2) {
+  setVertex(i: number, val: Vec2Union) {
     this.vertices[i] = vec2(val);
     return this;
   }
 
-  pushVertex(val: Vec2Array | Vec2) {
+  pushVertex(val: Vec2Union) {
     this.vertices.push(vec2(val));
     return this;
   }
@@ -341,19 +392,28 @@ class Outline extends GLShape {
         length: this.vertices.length + (this.loopEnd ? 1 : 0),
       },
       (_, i) => {
-        const prev = this.vertexAt(i - 1)!;
+        const prev = this.vertexAt(i - 1);
         const cur = this.vertices[i];
         const next = this.vertexAt(i + 1);
-        const next1 = cur.add(
-          next.subtract(cur).setMagnitude(this.width).rotate90()
-        );
-        const next2 = next1.rotate180();
-        const prev1 = prev.subtract(cur).setMagnitude(this.width).rotate90();
-        const prev2 = prev1.rotate180();
-        return [
-          ...mapVec(prev1.get(), next1.get(), 0.5),
-          ...mapVec(prev2.get(), next2.get(), 0.5),
-        ];
+
+        const prevDir = cur.subtract(prev);
+        const [prevBevel1, prevBevel2] = bevelLine(prev, prevDir, this.width);
+        const curDir = next.subtract(cur);
+        const [curBevel1, curBevel2] = bevelLine(cur, curDir, this.width);
+
+        const i1 = intersectionLineLine(
+          prevBevel1,
+          prevDir,
+          curBevel1,
+          curDir
+        ).toVec3();
+        const i2 = intersectionLineLine(
+          prevBevel2,
+          prevDir,
+          curBevel2,
+          curDir
+        ).toVec3();
+        return [...i1.get(), ...i2.get()];
       }
     ).flat();
   }
