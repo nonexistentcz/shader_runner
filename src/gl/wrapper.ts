@@ -2,13 +2,16 @@ import {
   BufferType,
   ClearBuffer,
   EnableFlags,
-  FrameBufferType,
+  FramebufferType,
   ShaderType,
+  TextureType,
 } from "./web-gl-enums";
 import { GLProgram } from "./program";
 import { GLBuffer, GLShader } from ".";
 import { Vec4Array } from "../utils/vector";
 import { GLFramebuffer } from "./framebuffer";
+import { GLTexture } from "./texture";
+import { GLShape } from "../render";
 
 export class GL2Wrapper {
   private static instance: GL2Wrapper | null = null;
@@ -54,7 +57,7 @@ export class GL2Wrapper {
 
   createShader(shaderType: ShaderType) {
     const shader = this.gl.createShader(shaderType);
-    if (!shader) throw "couldn't create shader";
+    if (!shader) throw new Error("couldn't create shader");
     return new GLShader(this.gl, shader, shaderType);
   }
 
@@ -71,14 +74,35 @@ export class GL2Wrapper {
     buffers.forEach((buffer) => buffer?.bind());
     fn();
     buffers.forEach((buffer) => buffer?.unbind());
+    return this;
   }
 
-  createFramebuffer(bufferType: FrameBufferType) {
+  createFramebuffer(bufferType: FramebufferType) {
     return new GLFramebuffer(this.gl, this.gl.createFramebuffer(), bufferType);
   }
 
   deleteFramebuffer(framebuffer: GLFramebuffer) {
     this.gl.deleteFramebuffer(framebuffer.getBuffer());
+    return this;
+  }
+
+  createTexture(textureType: TextureType) {
+    return new GLTexture(this.gl, this.gl.createTexture(), textureType);
+  }
+
+  deleteTexture(framebuffer: GLFramebuffer) {
+    this.gl.deleteTexture(framebuffer.getBuffer());
+    return this;
+  }
+
+  setActiveTexture(textureUnit: number) {
+    if (textureUnit < 0 || textureUnit > 31)
+      throw new Error(
+        `${textureUnit} is not a valid texture unit, if not, update the limits`
+      );
+
+    // @ts-expect-error this could potentially break in the future
+    new this.gl.activeTexture(this.gl[`TEXTURE${textureUnit}`]);
     return this;
   }
 
@@ -96,22 +120,34 @@ export class GL2Wrapper {
     return this.gl.getError();
   }
 
+  drawShape(
+    shape: GLShape,
+    type: GLenum = this.gl.UNSIGNED_SHORT,
+    offset: GLintptr = 0
+  ) {
+    this.gl.drawElements(shape.drawType, shape.vertexCount, type, offset);
+    return this;
+  }
+
   //-----------------------
   // Context functions
   //-----------------------
   enable(flag: EnableFlags) {
     this.setFlag(flag, true);
+    return this;
   }
 
   disable(flag: EnableFlags) {
     this.setFlag(flag, false);
+    return this;
   }
 
   setFlag(flag: EnableFlags, val: boolean) {
     if (val) {
       this.gl.enable(flag);
-      return;
+      return this;
     }
     this.gl.disable(flag);
+    return this;
   }
 }

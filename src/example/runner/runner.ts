@@ -1,12 +1,12 @@
-import { getCanvas, GLCanvas, uniform4x4 } from "../gl";
-import { GL2Wrapper } from "../gl/wrapper";
-import { Vec2, Vec3, Vec4Array } from "../utils/vector";
-import { BufferType, ShaderType } from "../gl/web-gl-enums";
-import { GLProgram } from "../gl";
-import { GLShader } from "../gl";
-import { GLUniformValue, uniform1f, uniform2fv } from "../gl";
-import { GLShape } from "../render/shapes";
-import { Matrix4x4 } from "../utils";
+import { getCanvas, GLCanvas, uniform4x4 } from "../../gl";
+import { GL2Wrapper } from "../../gl/wrapper";
+import { Vec2, Vec4Array } from "../../utils/vector";
+import { BufferType, FramebufferType } from "../../gl/web-gl-enums";
+import { GLProgram } from "../../gl";
+import { uniform1f, uniform2fv } from "../../gl";
+import { GLShape } from "../../render/shapes";
+import { Matrix4x4 } from "../../utils";
+import { ProgramBuilder } from "./program-builder";
 
 export function toClipCoords(vec: Vec2) {
   return new Vec2([vec.x * 2 - 1, vec.y * 2 - 1]);
@@ -19,13 +19,13 @@ type RunnerShape<T> = {
   props?: T;
 };
 
+type BuilderFunction = (builder: ProgramBuilder) => ProgramBuilder;
 type BeforeDraw<TProps> = (props?: TProps) => void;
 
 export class Runner<TProps> {
   private gl: GL2Wrapper;
   private canvas: GLCanvas;
-  private program: GLProgram;
-  private shaders = new Map<string, GLShader>();
+  private program: GLProgram | null = null;
   private shapes: RunnerShape<TProps>[] = [];
   private uTransform = uniform4x4("u_Transform", Matrix4x4.unit());
   private uResolution = uniform2fv("u_Resolution", [0, 0]);
@@ -37,7 +37,6 @@ export class Runner<TProps> {
   constructor(canvasId?: string) {
     this.canvas = getCanvas(canvasId);
     this.gl = this.canvas.getGl();
-    this.program = this.gl.createProgram();
   }
 
   get resolution() {
@@ -52,22 +51,17 @@ export class Runner<TProps> {
     return this.canvas;
   }
 
-  use(values: Array<GLShader | GLUniformValue<any> | GLShape>) {
+  use(values: Array<GLProgram | GLShape>) {
     values.forEach((value) => {
-      if (value instanceof GLShader) this.useShader(value);
-      else if (value instanceof GLUniformValue) this.useUniform(value);
-      else if (value instanceof GLShape) this.useShape(value);
+      if (value instanceof GLShape) this.useShape(value);
+      else if (value instanceof GLProgram) this.useProgram(value);
     });
     return this;
   }
 
-  useShader(shader: GLShader) {
-    this.program.attachShader(shader);
-    return this;
-  }
-
-  useUniform<T>(uniform: GLUniformValue<T>) {
-    return this.program.useUniform(uniform);
+  useProgram(program: GLProgram) {
+    this.program = program;
+    return this.gl.useProgram(program);
   }
 
   useShape(shape: GLShape, props?: TProps) {
@@ -78,6 +72,10 @@ export class Runner<TProps> {
 
     this.shapes.push({ shape, props });
     return this;
+  }
+
+  prepareFramebuffer(framebufferType = FramebufferType.FrameBuffer) {
+    return this.gl.createFramebuffer(framebufferType);
   }
 
   useBeforeDraw(beforeDraw: BeforeDraw<TProps>) {
@@ -97,35 +95,27 @@ export class Runner<TProps> {
     this.mouseMoveHandlers.push(fn);
   }
 
-  async loadShader(name: string, shaderType: ShaderType) {
-    const storedShader = this.shaders.get(name);
-    if (storedShader) this.program.attachNewShader(storedShader);
-    const shader = await this.gl.createShader(shaderType).fetchSource(name);
-    this.shaders.set(name, shader);
-    this.program.attachNewShader(shader.compile());
-  }
-
-  prepareProgram() {
-    this.gl.useProgram(this.program.link().validate());
-  }
-
   adjustSizeAndViewport() {
     this.getCanvas();
     this.canvas.adjustSizeAndViewport();
     this.uResolution.update([this.canvas.el.width, this.canvas.el.height]);
   }
 
-  async init({
-    fragmentShaderUrl = "/shader/main.frag",
-    vertexShaderUrl = "/shader/main.vert",
-  }: {
-    fragmentShaderUrl?: string;
-    vertexShaderUrl?: string;
-  } = {}) {
-    await this.loadShader(fragmentShaderUrl, ShaderType.Fragment);
-    await this.loadShader(vertexShaderUrl, ShaderType.Vertex);
-    this.prepareProgram();
-    this.use([this.uTransform, this.uMouse, this.uResolution, this.uTime]);
+  createProgram(buildProgram: BuilderFunction) {
+    return buildProgram(new ProgramBuilder()).build(this.gl);
+  }
+
+  async init(buildProgram: BuilderFunction = (builder) => builder) {
+    const program = await this.createProgram(buildProgram);
+
+    this.useProgram(program);
+    program.useUniforms([
+      this.uTransform,
+      this.uMouse,
+      this.uResolution,
+      this.uTime,
+    ]);
+
     this.adjustSizeAndViewport();
     this.canvas.onResize(() => this.adjustSizeAndViewport());
     this.canvas.el.addEventListener("mousemove", (e) => {
@@ -139,6 +129,8 @@ export class Runner<TProps> {
       this.uMouse.update(mouseCoords.get());
       this.mouseMoveHandlers.forEach((handler) => handler(mouseCoords, e));
     });
+
+    return program;
   }
 
   setClearColor(color: Vec4Array) {
@@ -157,6 +149,11 @@ export class Runner<TProps> {
     return this;
   }
 
+  drawShapes(shapes: RunnerShape<TProps>[], time = 0) {
+    this.uTime.update(time);
+    shapes.forEach(this.drawShape, this);
+  }
+
   private drawShape({ shape, props }: RunnerShape<TProps>) {
     this.uTransform.update(
       Matrix4x4.rotation(...shape.rotation.get()).translate(
@@ -170,16 +167,15 @@ export class Runner<TProps> {
 
     this.gl.withBufferBind(
       () => {
+        if (!this.program) {
+          throw new Error("A program must be attached in order to draw");
+        }
         this.program
           .getAttribLocation("a_position")
           .enable()
-          .setPointer(3, WebGL2RenderingContext.FLOAT, false, 0, 0);
-        this.gl.gl.drawElements(
-          shape.drawType,
-          shape.vertexCount,
-          this.gl.gl.UNSIGNED_SHORT,
-          0
-        );
+
+          .setPointer(3, WebGL2RenderingContext.FLOAT);
+        this.gl.drawShape(shape);
       },
       shape.indexBuffer,
       shape.vertexBuffer

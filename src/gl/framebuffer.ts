@@ -1,10 +1,10 @@
-import { FrameBufferType } from "./web-gl-enums";
+import { FramebufferType } from "./web-gl-enums";
 
 export class GLFramebuffer {
   constructor(
     private gl: WebGL2RenderingContext,
     private buffer: WebGLFramebuffer,
-    private preferredType: FrameBufferType
+    private preferredType: FramebufferType
   ) {}
 
   getBuffer() {

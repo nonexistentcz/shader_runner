@@ -30,7 +30,17 @@ export enum BufferType {
   Vertex = CTX.ARRAY_BUFFER,
 }
 
-export enum FrameBufferType {
+export enum FramebufferType {
   FrameBuffer = CTX.FRAMEBUFFER,
   DrawFrameBuffer = CTX.DRAW_FRAMEBUFFER,
+}
+
+export enum TextureType {
+  Texture2D = CTX.TEXTURE_2D,
+}
+
+export enum TextureWrap {
+  WrapR = CTX.TEXTURE_WRAP_R,
+  WrapS = CTX.TEXTURE_WRAP_S,
+  WrapT = CTX.TEXTURE_WRAP_T,
 }

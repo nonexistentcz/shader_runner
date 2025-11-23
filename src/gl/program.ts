@@ -16,13 +16,19 @@ export class GLProgram {
   ) {}
 
   link() {
-    this.gl.linkProgram(this.program);
+    const { gl, program } = this;
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      throw gl.getProgramInfoLog(program);
+    }
     return this;
   }
 
   validate() {
     const { gl, program } = this;
     gl.validateProgram(program);
+
     if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
       throw gl.getProgramInfoLog(program);
     }
@@ -74,6 +80,11 @@ export class GLProgram {
   useUniform<T>(uniform: GLUniformValue<T>) {
     return new GLUniform(this.gl, this.program, uniform);
   }
+
+  useUniforms(uniforms: GLUniformValue<any>[]) {
+    uniforms.forEach(this.useUniform, this);
+    return this;
+  }
 }
 
 class AttribLocation {
@@ -92,9 +103,9 @@ class AttribLocation {
   setPointer(
     size: GLint,
     type: GLenum,
-    normalized: GLboolean,
-    stride: GLsizei,
-    offset: GLintptr
+    normalized: GLboolean = false,
+    stride: GLsizei = 0,
+    offset: GLintptr = 0
   ) {
     this.gl.vertexAttribPointer(
       this.location,

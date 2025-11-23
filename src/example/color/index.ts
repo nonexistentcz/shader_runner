@@ -43,15 +43,21 @@ function update() {
 }
 
 export default async function init() {
-  await runner.init({ fragmentShaderUrl: "/shader/color.frag" });
+  const program = await runner.init((builder) =>
+    builder.fragmentUrl("/shader/color.frag")
+  );
+
+  program.useUniform(uColor);
+
   shapes.forEach(([shape, color]) => runner.useShape(shape.obj, { color }));
 
   runner
-    .use([rectangle(2.2, 2.2, 0.1), uColor])
+    .useShape(rectangle(2.2, 2.2, 0.1))
     .setClearColor([1, 1, 1, 1])
     .useBeforeDraw((props) => {
       uColor.update((props?.color ?? defaultColor).get());
     });
+
   draw();
 }
 

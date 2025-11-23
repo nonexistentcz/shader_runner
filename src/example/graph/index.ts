@@ -56,7 +56,7 @@ function initGraph() {
 
 export default async function init() {
   const canvas = runner.getCanvas();
-  await runner.init({ fragmentShaderUrl: "/shader/graph.frag" });
+  await runner.init((builder) => builder.fragmentUrl("/shader/graph.frag"));
   canvas.el.addEventListener("click", initGraph);
   runner.setClearColor(NONEX.get());
   initGraph();
