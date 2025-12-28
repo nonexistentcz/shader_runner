@@ -2,16 +2,18 @@ import {
   BufferType,
   ClearBuffer,
   EnableFlags,
-  FramebufferType,
+  FramebufferTarget,
   ShaderType,
-  TextureType,
+  TextureTarget,
 } from "./web-gl-enums";
 import { GLProgram } from "./program";
 import { GLBuffer, GLShader } from ".";
 import { Vec4Array } from "../utils/vector";
 import { GLFramebuffer } from "./framebuffer";
-import { GLTexture } from "./texture";
+import { GLTexture } from "./texture/texture";
 import { GLShape } from "../render";
+
+const TEXTURE_UNIT_LIMIT = 31;
 
 export class GL2Wrapper {
   private static instance: GL2Wrapper | null = null;
@@ -77,7 +79,7 @@ export class GL2Wrapper {
     return this;
   }
 
-  createFramebuffer(bufferType: FramebufferType) {
+  createFramebuffer(bufferType: FramebufferTarget) {
     return new GLFramebuffer(this.gl, this.gl.createFramebuffer(), bufferType);
   }
 
@@ -86,7 +88,7 @@ export class GL2Wrapper {
     return this;
   }
 
-  createTexture(textureType: TextureType) {
+  createTexture(textureType: TextureTarget) {
     return new GLTexture(this.gl, this.gl.createTexture(), textureType);
   }
 
@@ -96,7 +98,7 @@ export class GL2Wrapper {
   }
 
   setActiveTexture(textureUnit: number) {
-    if (textureUnit < 0 || textureUnit > 31)
+    if (textureUnit < 0 || textureUnit > TEXTURE_UNIT_LIMIT)
       throw new Error(
         `${textureUnit} is not a valid texture unit, if not, update the limits`
       );

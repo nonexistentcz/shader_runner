@@ -1,2 +1,2 @@
-export * from "./runner";
-export * from "./program-builder";
+export * from "./gl-runner";
+export * from "./gl-runner-program-builder";

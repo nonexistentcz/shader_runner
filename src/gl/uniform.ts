@@ -108,43 +108,43 @@ export function uniform4x4(name: string, value: Matrix4x4) {
   });
 }
 
-export class GLUniformValue<T> {
-  private boundUniforms: GLUniform<T>[] = [];
+export class GLUniformValue<TValue> {
+  private boundUniforms: GLUniform<TValue>[] = [];
 
   constructor(
     public name: string,
-    private _value: T,
+    private _value: TValue,
     public _updateFn: (
-      this: GLUniformValue<T>,
+      this: GLUniformValue<TValue>,
       gl: WebGL2RenderingContext,
       location: WebGLUniformLocation | null
     ) => void
   ) {}
 
-  get value(): T {
+  get value(): TValue {
     return this._value;
   }
 
-  update(val: T): this {
+  update(val: TValue): this {
     this._value = val;
     this.boundUniforms.forEach((uniform) => uniform.updateValue());
     return this;
   }
 
-  _bind(uniform: GLUniform<T>) {
+  _bind(uniform: GLUniform<TValue>) {
     if (!this.boundUniforms.includes(uniform)) this.boundUniforms.push(uniform);
     uniform.updateValue();
     return this;
   }
 }
 
-export class GLUniform<T> {
+export class GLUniform<TValue> {
   public location: WebGLUniformLocation | null;
 
   constructor(
     public gl: WebGL2RenderingContext,
     private program: WebGLProgram,
-    public valueContainer: GLUniformValue<T>
+    public valueContainer: GLUniformValue<TValue>
   ) {
     this.location = this.gl.getUniformLocation(
       program,

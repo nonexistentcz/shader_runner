@@ -10,6 +10,10 @@ export class GLShader {
     private type: ShaderType
   ) {}
 
+  delete() {
+    this.gl.deleteShader(this.shader);
+  }
+
   getShader() {
     return this.shader;
   }
@@ -42,9 +46,5 @@ export class GLShader {
       throw gl.getShaderInfoLog(shader);
     }
     return this;
-  }
-
-  delete() {
-    this.gl.deleteShader(this.shader);
   }
 }

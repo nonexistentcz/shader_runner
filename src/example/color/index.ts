@@ -1,4 +1,4 @@
-import { Runner } from "../runner";
+import { GLRunner } from "../runner";
 import { rectangle } from "../../render/shapes";
 import { vec3, Vec3, Vec3Array } from "../../utils/vector";
 import {
@@ -9,8 +9,10 @@ import {
 } from "../shapes/shape";
 import { uniform3fv } from "../../gl";
 import convert from "color-convert";
+import { GLRunnerShape } from "../runner/types";
+import { GLRunnerProgram } from "../runner/gl-runner-program";
 
-const runner = new Runner<{ color: Vec3 }>();
+const runner = new GLRunner().setClearColor([1, 1, 1, 1]);
 const defaultColor = getRandomPastelColor();
 const uColor = uniform3fv("u_Color", defaultColor.get());
 
@@ -43,26 +45,31 @@ function update() {
 }
 
 export default async function init() {
-  const program = await runner.init((builder) =>
-    builder.fragmentUrl("/shader/color.frag")
+  const program = await runner.createRunnerProgram((builder) =>
+    builder
+      .fragmentUrl("/shader/color.frag")
+      .uniform(uColor)
+      .useCustomShape(
+        (glShape: GLRunnerShape<{ color: Vec3 }>) => glShape.shape
+      )
+      .useBeforeShapeDraw(({ color }) => uColor.update(color.get()))
+  );
+  program.use();
+  shapes.forEach(([shape, color]) =>
+    program.useShape({ shape: shape.obj, color })
   );
 
-  program.useUniform(uColor);
+  program.useShape({ shape: rectangle(2.2, 2.2, 0.1), color: defaultColor });
 
-  shapes.forEach(([shape, color]) => runner.useShape(shape.obj, { color }));
-
-  runner
-    .useShape(rectangle(2.2, 2.2, 0.1))
-    .setClearColor([1, 1, 1, 1])
-    .useBeforeDraw((props) => {
-      uColor.update((props?.color ?? defaultColor).get());
-    });
-
-  draw();
+  draw(program);
 }
 
-function draw(time = 0) {
+function draw(
+  program: GLRunnerProgram<GLRunnerShape<{ color: Vec3 }>>,
+  time = 0
+) {
   update();
-  runner.clear().draw(time);
-  requestAnimationFrame(draw);
+  runner.clear();
+  program.draw(time);
+  requestAnimationFrame((time) => draw(program, time));
 }

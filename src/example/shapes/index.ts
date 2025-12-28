@@ -1,12 +1,13 @@
-import { Runner } from "../runner";
+import { GLRunner } from "../runner";
 import { createShape, handleCollisionBallBall, collideBallWall } from "./shape";
 import { BOUNDING_BOX, NONEX } from "../common";
+import { GLRunnerProgram } from "../runner/gl-runner-program";
 
 export type Shape = ReturnType<typeof createShape>;
 
 export const SHAPE_SIZE = 0.05;
 
-const runner = new Runner();
+const runner = new GLRunner().setClearColor(NONEX.get());
 
 const shapes: Shape[] = [];
 
@@ -23,29 +24,31 @@ function update() {
   });
 }
 
-window.addEventListener("keydown", (ev) => {
-  if (ev.key === "ArrowUp") {
-    const ball = createShape();
-    runner.useShape(ball.obj);
-    shapes.push(ball);
-  }
-  if (ev.key === "ArrowDown") {
-    const obj = shapes.pop()?.obj;
-    if (!obj) return;
-    runner.removeShape(obj);
-  }
-});
-
 export default async function init() {
-  await runner.init();
-  runner.use([BOUNDING_BOX]);
-  runner.setClearColor(NONEX.get());
-  animate();
+  const program = await runner.createRunnerProgram((builder) =>
+    builder.useTime()
+  );
+  program.use();
+  program.useShape(BOUNDING_BOX);
+
+  window.addEventListener("keydown", (ev) => {
+    if (ev.key === "ArrowUp") {
+      const ball = createShape();
+      program.useShape(ball.obj);
+      shapes.push(ball);
+    }
+    if (ev.key === "ArrowDown") {
+      const obj = shapes.pop()?.obj;
+      if (!obj) return;
+      program.removeShape(obj);
+    }
+  });
+  animate(program);
 }
 
-function animate(time = 0) {
+function animate(program: GLRunnerProgram, time = 0) {
   update();
   runner.clear();
-  runner.draw(time);
-  requestAnimationFrame(animate);
+  program.draw(time);
+  requestAnimationFrame((time) => animate(program, time));
 }

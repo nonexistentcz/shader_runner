@@ -1,23 +1,52 @@
-import { FramebufferType } from "./web-gl-enums";
+import { GLTexture } from "./texture";
+import { FramebufferTarget } from "./web-gl-enums";
+
+const COLOR_ATTACHMENT_LIMIT = 15;
 
 export class GLFramebuffer {
   constructor(
     private gl: WebGL2RenderingContext,
     private buffer: WebGLFramebuffer,
-    private preferredType: FramebufferType
+    private target: FramebufferTarget
   ) {}
 
   getBuffer() {
     return this.buffer;
   }
 
-  bind(bufferType = this.preferredType) {
+  getTarget() {
+    return this.target;
+  }
+
+  bind(bufferType = this.target) {
     this.gl.bindFramebuffer(bufferType, this.buffer);
     return this;
   }
 
-  unbind(bufferType = this.preferredType) {
+  unbind(bufferType = this.target) {
     this.gl.bindFramebuffer(bufferType, null);
+    return this;
+  }
+
+  delete() {
+    this.gl.deleteFramebuffer(this.buffer);
+  }
+
+  texture2D(texture: GLTexture, colorAttachment: number, levelOfDepth: number) {
+    if (colorAttachment < 0 || colorAttachment > COLOR_ATTACHMENT_LIMIT)
+      throw new Error(
+        `${colorAttachment} is not a color attachment, if not, update the limits`
+      );
+
+    this.gl.framebufferTexture2D(
+      this.target,
+      // @ts-expect-error this could potentially break in the future
+      this.gl[`COLOR_ATTACHMENT${colorAttachment}`],
+      texture.getTarget(),
+      texture.getTexture(),
+      levelOfDepth
+    );
+
     return this;
   }
 }

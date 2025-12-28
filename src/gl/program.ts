@@ -6,14 +6,18 @@ export class GLProgram {
   private fragmentShader: GLShader | null = null;
   private vertexShader: GLShader | null = null;
 
-  getProgram() {
-    return this.program;
-  }
-
   constructor(
     private gl: WebGL2RenderingContext,
     private program: WebGLProgram
   ) {}
+
+  getProgram() {
+    return this.program;
+  }
+
+  delete() {
+    this.gl.deleteProgram(this.program);
+  }
 
   link() {
     const { gl, program } = this;

@@ -31,6 +31,10 @@ export class GLBuffer {
     return this;
   }
 
+  delete() {
+    this.gl.deleteBuffer(this.buffer);
+  }
+
   setData(
     data: AllowSharedBufferSource | null,
     {

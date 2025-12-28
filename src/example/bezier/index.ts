@@ -2,9 +2,10 @@ import { circle, GLShape, line } from "../../render/shapes";
 import { cubicBezier } from "../../utils";
 import { vec3 } from "../../utils";
 import { BOUNDING_BOX, NONEX } from "../common";
-import { Runner } from "../runner";
+import { GLRunner } from "../runner";
+import { GLRunnerProgram } from "../runner/gl-runner-program";
 
-const runner = new Runner();
+const runner = new GLRunner();
 const points = [
   circle(0.004, 20).setCenter(vec3([-0.8, -0.8, 0])),
   circle(0.004, 20).setCenter(vec3([0.8, -0.8, 0])),
@@ -39,17 +40,17 @@ function createCubicArray() {
   ]).flat();
 }
 
-function updateLines() {
-  if (lines) lines.forEach((lineObj) => runner.removeShape(lineObj));
+function updateLines(program: GLRunnerProgram) {
+  if (lines) lines.forEach((lineObj) => program.removeShape(lineObj));
   lines = createCubicArray();
-  runner.use(lines);
+  program.useShapes(lines);
 }
 
 export default async function init() {
-  await runner.init();
-  runner.useShape(BOUNDING_BOX);
-  runner.use(points);
-  runner.use(pointLines);
+  const program = await runner.createRunnerProgram((builder) =>
+    builder.useTime()
+  );
+  program.use().useShape(BOUNDING_BOX).useShapes(points).useShapes(pointLines);
   runner.setClearColor(NONEX.get());
   runner.onMouseMove((coords) => {
     if (selected === -1) return;
@@ -61,7 +62,7 @@ export default async function init() {
       selectedLine.setStart(coords);
     }
     selectedLine.updateBuffers();
-    updateLines();
+    updateLines(program);
   });
   const canvasEl = runner.getCanvas().el;
   canvasEl.addEventListener("mousedown", () => {
@@ -69,16 +70,16 @@ export default async function init() {
       (point) => point.center.toVec2().distanceTo(runner.mouse) < DISTANCE
     );
   });
-  updateLines();
+  updateLines(program);
   canvasEl.addEventListener("mouseup", () => (selected = -1));
   runner.onMouseMove(() => {
-    if (selected) updateLines();
+    if (selected) updateLines(program);
   });
-  draw();
+  draw(program);
 }
 
-function draw(time = 0) {
+function draw(program: GLRunnerProgram, time = 0) {
   runner.clear();
-  runner.draw(time);
-  requestAnimationFrame(draw);
+  program.draw(time);
+  requestAnimationFrame((time) => draw(program, time));
 }

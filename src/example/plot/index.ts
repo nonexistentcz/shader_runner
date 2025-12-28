@@ -1,21 +1,22 @@
-import { Runner, toClipCoords } from "../runner";
+import { GLRunner, toClipCoords } from "../runner";
 import { line } from "../../render/shapes";
 import { vec2 } from "../../utils/vector";
 import { BOUNDING_BOX, NONEX } from "../common";
+import { GLRunnerProgram } from "../runner/gl-runner-program";
 
 type Line = ReturnType<typeof line>;
 
-const runner = new Runner();
+const runner = new GLRunner();
 let gShapes: Line[] | undefined;
 let precision = 200;
 
-function usePlot(shapes: Line[]) {
-  if (gShapes) gShapes.forEach((shape) => runner.removeShape(shape));
+function usePlot(program: GLRunnerProgram, shapes: Line[]) {
+  if (gShapes) gShapes.forEach((shape) => program.removeShape(shape));
   gShapes = shapes;
-  runner.use(shapes);
+  program.useShapes(shapes);
 }
 
-function initPlot(fn: (x: number) => number) {
+function initPlot(program: GLRunnerProgram, fn: (x: number) => number) {
   const shapes = Array.from({ length: precision }, (_, i) =>
     line(
       toClipCoords(
@@ -31,29 +32,31 @@ function initPlot(fn: (x: number) => number) {
       0.001
     )
   );
-  usePlot(shapes);
+  usePlot(program, shapes);
 }
 
 export default async function init(fn: (x: number) => number) {
-  await runner.init();
-  runner.use([BOUNDING_BOX]);
+  const program = await runner.createRunnerProgram((builder) =>
+    builder.useTime()
+  );
+  program.use().useShape(BOUNDING_BOX);
   window.addEventListener("keydown", (ev) => {
     if (ev.key === "ArrowUp") {
       precision += 1;
-      initPlot(fn);
+      initPlot(program, fn);
     }
     if (ev.key === "ArrowDown") {
       precision -= 1;
-      initPlot(fn);
+      initPlot(program, fn);
     }
   });
   runner.setClearColor(NONEX.get());
-  initPlot(fn);
-  animate();
+  initPlot(program, fn);
+  animate(program);
 }
 
-function animate(time = 0) {
+function animate(program: GLRunnerProgram, time = 0) {
   runner.clear();
-  runner.draw(time);
-  requestAnimationFrame(animate);
+  program.draw(time);
+  requestAnimationFrame((time) => animate(program, time));
 }

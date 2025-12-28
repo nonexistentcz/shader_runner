@@ -1,23 +1,21 @@
-import { rectangle } from "../../render";
-import { vec3 } from "../../utils";
 import { NONEX } from "../common";
-import { Runner } from "../runner";
+import { GLRunner } from "../runner";
+import { drawPost, initPost } from "./effect";
+import { drawScene, initScene } from "./scene";
+import { RunnerRoutines } from "./types";
 
-const runner = new Runner();
-const shape = rectangle(0.5, 0.5, 0.2);
+export const runner = new GLRunner().setClearColor(NONEX.get());
 
 export default async function init() {
-  await runner.init();
-  const framebuffer = runner.prepareFramebuffer().bind();
-  runner.useShape(shape);
-  runner.setClearColor(NONEX.get());
-  animate();
+  const scene = await initScene(runner);
+  const post = await initPost(runner);
+  animate({ scene, post });
 }
 
-function animate(time = 0) {
+function animate(routines: RunnerRoutines, time = 0) {
   runner.clear();
-  shape.rotation = shape.rotation.add(vec3([0, 0, 0.01]));
+  drawScene(time, runner, routines.scene);
+  drawPost(routines.post);
 
-  runner.draw(time);
-  requestAnimationFrame(animate);
+  requestAnimationFrame((time) => animate(routines, time));
 }

@@ -1,14 +1,15 @@
-import { Runner } from "../runner";
+import { GLRunner } from "../runner";
 import { line } from "../../render/shapes";
 import { map } from "../../utils/ease";
 import { vec2, vec4 } from "../../utils/vector";
 import { randomMapped } from "../shapes/shape";
+import { GLRunnerProgram } from "../runner/gl-runner-program";
 
 const NONEX = vec4([0.66, 0.12, 0.28, 1]);
 
 type Line = ReturnType<typeof line>;
 
-const runner = new Runner();
+const runner = new GLRunner();
 let gShapes: Line[] | undefined;
 let arrCurr: number[] | undefined;
 let arrNext: number[] | undefined;
@@ -28,10 +29,10 @@ function getShapesFromArray(arr: number[]) {
   });
 }
 
-function useGraph(shapes: Line[]) {
-  if (gShapes) gShapes.forEach((shape) => runner.removeShape(shape));
+function useGraph(program: GLRunnerProgram<Line>, shapes: Line[]) {
+  if (gShapes) gShapes.forEach((shape) => program.removeShape(shape));
   gShapes = shapes;
-  shapes.forEach((shape) => runner.useShape(shape));
+  program.useShapes(shapes);
 }
 
 function updateGraph() {
@@ -48,22 +49,28 @@ function createGraph() {
   arrNext = getRandomArray(length);
 }
 
-function initGraph() {
+function initGraph(program: GLRunnerProgram<Line>) {
   createGraph();
   const shapes = getShapesFromArray(arrCurr!);
-  useGraph(shapes);
+  useGraph(program, shapes);
 }
 
 export default async function init() {
   const canvas = runner.getCanvas();
-  await runner.init((builder) => builder.fragmentUrl("/shader/graph.frag"));
-  canvas.el.addEventListener("click", initGraph);
+  const program = await runner.createRunnerProgram((builder) =>
+    builder
+      .fragmentUrl("/shader/graph.frag")
+      .useCustomShape((shape: Line) => shape)
+      .useTime()
+  );
+  program.use();
+  canvas.el.addEventListener("click", () => initGraph(program));
   runner.setClearColor(NONEX.get());
-  initGraph();
-  animate();
+  initGraph(program);
+  animate(program);
 }
 
-function animate(time = 0) {
+function animate(program: GLRunnerProgram<Line>, time = 0) {
   x += (time - timeLast) / 1000;
   timeLast = time;
   if (x > 1) {
@@ -73,6 +80,6 @@ function animate(time = 0) {
   }
   runner.clear();
   updateGraph();
-  runner.draw(time);
-  requestAnimationFrame(animate);
+  program.draw(time);
+  requestAnimationFrame((time) => animate(program, time));
 }

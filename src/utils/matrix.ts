@@ -1,3 +1,4 @@
+import { GLShape } from "../render";
 import { Vec4Array } from "./vector";
 
 type Matrix4x4Array = [Vec4Array, Vec4Array, Vec4Array, Vec4Array];
@@ -109,6 +110,12 @@ export class Matrix4x4 {
 
   static translated(x: number, y: number, z: number) {
     return new Matrix4x4(translateXYZ(x, y, z));
+  }
+
+  static fromShape(shape: GLShape) {
+    return Matrix4x4.rotation(...shape.rotation.get()).translate(
+      ...shape.center.get()
+    );
   }
 
   transpose() {
