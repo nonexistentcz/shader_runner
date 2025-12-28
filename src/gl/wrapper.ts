@@ -104,7 +104,7 @@ export class GL2Wrapper {
       );
 
     // @ts-expect-error this could potentially break in the future
-    new this.gl.activeTexture(this.gl[`TEXTURE${textureUnit}`]);
+    this.gl.activeTexture(this.gl[`TEXTURE${textureUnit}`]);
     return this;
   }
 

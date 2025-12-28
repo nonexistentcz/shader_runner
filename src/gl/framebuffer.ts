@@ -28,6 +28,20 @@ export class GLFramebuffer {
     return this;
   }
 
+  withBind<T>(fn: (buffer: this) => T) {
+    this.bind();
+    const result = fn(this);
+    this.unbind();
+    return result;
+  }
+
+  async withBindAsync(fn: (buffer: this) => Promise<void>) {
+    this.bind();
+    const result = await fn(this);
+    this.unbind();
+    return result;
+  }
+
   delete() {
     this.gl.deleteFramebuffer(this.buffer);
   }

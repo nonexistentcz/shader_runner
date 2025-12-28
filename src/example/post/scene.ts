@@ -25,11 +25,17 @@ export async function initScene(runner: GLRunner) {
       .fragmentUrl("/shader/color.frag")
       .uniform(uColor)
       .useBeforeShapeDraw((shape) => uColor.update(shape.color))
+      .useTime()
   );
+
   program.useShape({ shape, color: uColor.value });
   const texture = runner
     .createTexture(TextureTarget.Texture2D)
     .bind()
+    .texParamenteri(
+      WebGL2RenderingContext.TEXTURE_MIN_FILTER,
+      WebGL2RenderingContext.NEAREST
+    )
     .texImage2D(TexImage2DTarget.Tex2D, 0, (builder) =>
       builder.useSourceData({
         dimensions: runner.resolution,
@@ -39,15 +45,18 @@ export async function initScene(runner: GLRunner) {
   const framebuffer = runner
     .prepareFramebuffer()
     .bind()
-    .texture2D(texture, 0, 0);
+    .texture2D(texture, 0, 0)
+    .unbind();
   return { program, texture, framebuffer };
 }
 
 export function drawScene(time: number, runner: GLRunner, scene: SceneRoutine) {
   scene.program.use();
-  scene.framebuffer.bind();
-  shape.rotation.rotateZ(time / 1000);
-  runner.clear();
-  scene.program.draw();
-  scene.framebuffer.unbind();
+  scene.framebuffer.withBind(() => {
+    shape.rotation.z = time / 500;
+    scene.texture.bind();
+    runner.clear();
+    scene.program.draw(time);
+    scene.texture.unbind();
+  });
 }

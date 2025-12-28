@@ -65,6 +65,12 @@ export class GLRunner {
     return this.gl.createTexture(textureType);
   }
 
+  setActiveTexture(textureUnit: number) {
+    this.gl.setActiveTexture(textureUnit);
+
+    return this;
+  }
+
   private _initListeners() {
     this.canvas.onResize((e) => {
       this.adjustSizeAndViewport();

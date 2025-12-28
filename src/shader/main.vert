@@ -1,3 +1,7 @@
+#ifdef GL_ES
+precision mediump float;
+#endif
+
 in vec3 a_position;
 
 uniform mat4 u_Transform;

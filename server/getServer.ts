@@ -25,7 +25,9 @@ export async function getServer() {
       )
     );
   });
+
   app.use(router);
+  app.use(express.static("public"));
 
   return app;
 }

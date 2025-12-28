@@ -109,7 +109,7 @@ export function uniform4x4(name: string, value: Matrix4x4) {
 }
 
 export class GLUniformValue<TValue> {
-  private boundUniforms: GLUniform<TValue>[] = [];
+  private boundUniform: GLUniform<TValue> | null = null;
 
   constructor(
     public name: string,
@@ -127,14 +127,18 @@ export class GLUniformValue<TValue> {
 
   update(val: TValue): this {
     this._value = val;
-    this.boundUniforms.forEach((uniform) => uniform.updateValue());
+    this.boundUniform?.updateValue();
     return this;
   }
 
-  _bind(uniform: GLUniform<TValue>) {
-    if (!this.boundUniforms.includes(uniform)) this.boundUniforms.push(uniform);
+  private bind(uniform: GLUniform<TValue>) {
+    this.boundUniform = uniform;
     uniform.updateValue();
     return this;
+  }
+
+  getInternalValue() {
+    return this.boundUniform?.getInternalValue();
   }
 }
 
@@ -151,7 +155,9 @@ export class GLUniform<TValue> {
       this.valueContainer.name
     );
 
-    this.valueContainer._bind(this);
+    this.valueContainer
+      // @ts-expect-error
+      .bind(this);
   }
 
   public updateValue() {

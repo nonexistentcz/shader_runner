@@ -59,3 +59,11 @@ export type TextureImageSourceData = {
 export type TextureImageSourceInfo =
   | TextureImageSource
   | TextureImageSourceData;
+
+export enum MinFilter {
+  Linear = WebGL2RenderingContext.LINEAR,
+  Nearest = WebGL2RenderingContext.NEAREST,
+  LinearMipmapNearest = WebGL2RenderingContext.LINEAR_MIPMAP_NEAREST,
+  LinearMipmapLinear = WebGL2RenderingContext.LINEAR_MIPMAP_LINEAR,
+  NearestMipmapLinear = WebGL2RenderingContext.NEAREST_MIPMAP_LINEAR,
+}

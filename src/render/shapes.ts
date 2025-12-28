@@ -9,7 +9,7 @@ import {
   Vec3,
 } from "../utils/vector";
 import { Buffers, GLBuffer } from "../gl";
-import { clamp, mapVec, Matrix4x4 } from "../utils";
+import { clamp, Matrix4x4 } from "../utils";
 
 export enum DrawType {
   Points = WebGL2RenderingContext.POINTS,

@@ -3,7 +3,7 @@ import { ShaderFile } from "./shaderFileTransformer";
 const fragTemplate = `#version 300 es
 
 #ifdef GL_ES
-precision highp float;
+precision mediump float;
 #endif`;
 
 export function shaderTemplate(source: ShaderFile) {

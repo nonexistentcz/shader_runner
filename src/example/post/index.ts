@@ -15,7 +15,7 @@ export default async function init() {
 function animate(routines: RunnerRoutines, time = 0) {
   runner.clear();
   drawScene(time, runner, routines.scene);
-  drawPost(routines.post);
+  drawPost(routines.post, runner, routines.scene.texture);
 
   requestAnimationFrame((time) => animate(routines, time));
 }
