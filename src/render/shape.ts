@@ -3,44 +3,22 @@ import {
   intersectionLineLine,
   vec2,
   Vec2,
-  Vec2Array,
   Vec2Union,
-  vec3,
-  Vec3,
 } from "../utils/vector";
 import { Buffers, GLBuffer } from "../gl";
-import { clamp, Matrix4x4 } from "../utils";
+import { clamp } from "../utils";
+import { DrawType, Shape, ShapeTransform } from "./types";
 
-export enum DrawType {
-  Points = WebGL2RenderingContext.POINTS,
-  LineStrip = WebGL2RenderingContext.LINE_STRIP,
-  LineLoop = WebGL2RenderingContext.LINE_LOOP,
-  Lines = WebGL2RenderingContext.LINES,
-  TriangleStrip = WebGL2RenderingContext.TRIANGLE_STRIP,
-  TriangleFan = WebGL2RenderingContext.TRIANGLE_FAN,
-  Triangles = WebGL2RenderingContext.TRIANGLES,
-}
-
-interface Shape {
-  center: Vec3;
-  rotation: Vec3;
-  drawType: DrawType;
-
-  get vertexCount(): number;
-  get vertexBuffer(): GLBuffer | undefined;
-  get indexBuffer(): GLBuffer | undefined;
-
-  getVertexData(): number[];
-  getTransformationMatrix(): Matrix4x4;
-}
-
-export class GLShape implements Shape {
+export class GLShape<
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>,
+> implements Shape<TMatrix, TTransform> {
   protected _vertexBuffer?: GLBuffer;
   protected _indexBuffer?: GLBuffer;
   public drawType = DrawType.Triangles;
   private _vertexCount = 0;
-  public center: Vec3 = vec3([0, 0, 0]);
-  public rotation: Vec3 = vec3([0, 0, 0]);
+
+  constructor(public transform: TTransform) {}
 
   get vertexBuffer() {
     return this._vertexBuffer;
@@ -54,11 +32,6 @@ export class GLShape implements Shape {
     return this._vertexCount;
   }
 
-  setCenter(pos: Vec3) {
-    this.center = pos;
-    return this;
-  }
-
   bind({ index, vertex }: Buffers) {
     this._vertexBuffer = vertex;
     this._indexBuffer = index;
@@ -70,16 +43,10 @@ export class GLShape implements Shape {
     const vertices = this.getVertexData();
     this._vertexBuffer?.setDataWithBind(new Float32Array(vertices));
     this._indexBuffer?.setDataWithBind(
-      new Uint16Array(Array.from({ length: vertices.length / 3 }, (_, i) => i))
+      new Uint16Array(Array.from({ length: vertices.length / 3 }, (_, i) => i)),
     );
     this._vertexCount = vertices.length / 3;
     return this;
-  }
-
-  getTransformationMatrix() {
-    return Matrix4x4.unit()
-      .rotate(...this.rotation.get())
-      .translate(...this.center.get());
   }
 
   getVertexData(): number[] {
@@ -87,10 +54,24 @@ export class GLShape implements Shape {
   }
 }
 
-class Rectangle extends GLShape {
+export class Rectangle<
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>,
+> extends GLShape<TMatrix, TTransform> {
   public drawType = DrawType.TriangleFan;
-  constructor(public width: number, public height: number) {
-    super();
+  constructor(
+    transform: TTransform,
+    public width: number,
+    public height: number,
+  ) {
+    super(transform);
+  }
+
+  setSize(size: Vec2Union) {
+    const _size = vec2(size);
+    this.width = _size.x;
+    this.height = _size.y;
+    return this;
   }
 
   getVertexData(): number[] {
@@ -102,34 +83,34 @@ class Rectangle extends GLShape {
   }
 }
 
-export function rectangle(
-  width: number,
-  height: number,
-  outlineWidth?: number
-) {
-  if (outlineWidth) {
-    return new RectangleOutlined(width, height, outlineWidth);
-  }
-  return new Rectangle(width, height);
-}
-
-class RectangleOutlined extends GLShape {
+export class RectangleOutlined<
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>,
+> extends GLShape<TMatrix, TTransform> {
   constructor(
+    transform: TTransform,
     public width: number,
     public height: number,
-    public outlineWidth: number
+    public outlineWidth: number,
   ) {
-    super();
+    super(transform);
+  }
+
+  setSize(size: Vec2Union) {
+    const _size = vec2(size);
+    this.width = _size.x;
+    this.height = _size.y;
+    return this;
   }
 
   getVertexData(): number[] {
     const topLeft = new Vec2([-this.width / 2, -this.height / 2]);
     const bottomRight = new Vec2([this.width / 2, this.height / 2]);
     const topLeftOutline = topLeft.add(
-      new Vec2([this.outlineWidth, this.outlineWidth])
+      new Vec2([this.outlineWidth, this.outlineWidth]),
     );
     const bottomRightOutline = bottomRight.subtract(
-      new Vec2([this.outlineWidth, this.outlineWidth])
+      new Vec2([this.outlineWidth, this.outlineWidth]),
     );
     return [
       // 1
@@ -212,14 +193,21 @@ class RectangleOutlined extends GLShape {
   }
 }
 
-class Circle extends GLShape {
+export class Circle<
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>,
+> extends GLShape<TMatrix, TTransform> {
   public drawType = DrawType.TriangleFan;
   constructor(
+    transform: TTransform,
+    /** Radius of the circle in world units */
     public radius: number,
+    /** Arc angle in radians (2π for a full circle) */
     public theta: number,
-    public precision: number
+    /** Number of triangle segments used to approximate the circle */
+    public precision: number,
   ) {
-    super();
+    super(transform);
   }
 
   getVertexData(): number[] {
@@ -230,19 +218,19 @@ class Circle extends GLShape {
   }
 }
 
-export function circle(radius: number, precision: number) {
-  return new Circle(radius, 2 * Math.PI, precision);
-}
-
-class Ring extends GLShape {
+export class Ring<
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>,
+> extends GLShape<TMatrix, TTransform> {
   public drawType = DrawType.TriangleStrip;
   constructor(
+    transform: TTransform,
     public radius: number,
     public radiusInner: number,
     public theta: number,
-    public precision: number
+    public precision: number,
   ) {
-    super();
+    super(transform);
   }
 
   getVertexData(): number[] {
@@ -260,14 +248,18 @@ class Ring extends GLShape {
   }
 }
 
-export function ring(radius: number, radiusInner: number, precision: number) {
-  return new Ring(radius, radiusInner, 2 * Math.PI, precision);
-}
-
-class Line extends GLShape {
+export class Line<
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>,
+> extends GLShape<TMatrix, TTransform> {
   drawType = DrawType.TriangleFan;
-  constructor(public x1: Vec2, public x2: Vec2, public width: number) {
-    super();
+  constructor(
+    transform: TTransform,
+    public x1: Vec2,
+    public x2: Vec2,
+    public width: number,
+  ) {
+    super(transform);
   }
 
   setStart(start: Vec2Union) {
@@ -309,16 +301,19 @@ class Line extends GLShape {
   }
 }
 
-export function line(x1: Vec2, x2: Vec2, width: number) {
-  return new Line(x1, x2, width);
-}
-
-class Polygon extends GLShape {
+export class Polygon<
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>,
+> extends GLShape<TMatrix, TTransform> {
   public drawType: DrawType = DrawType.TriangleFan;
   public vertices: Vec2[];
 
-  constructor(_vertices: Array<Vec2Union>, public loopEnd = false) {
-    super();
+  constructor(
+    transform: TTransform,
+    _vertices: Vec2Union[],
+    public loopEnd = false,
+  ) {
+    super(transform);
     this.vertices = _vertices.map(vec2);
   }
 
@@ -344,26 +339,26 @@ class Polygon extends GLShape {
       {
         length: this.vertices.length + (this.loopEnd ? 1 : 0),
       },
-      (_, i) => this.vertexAt(i).toVec3().get()
+      (_, i) => this.vertexAt(i).toVec3().get(),
     ).flat();
     console.log(data);
     return data;
   }
 }
 
-export function polygon(vertices: Vec2Array[], loopEnd = false) {
-  return new Polygon(vertices, loopEnd);
-}
-
-class Outline extends GLShape {
+export class Outline<
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>,
+> extends GLShape<TMatrix, TTransform> {
   public drawType: DrawType = DrawType.TriangleStrip;
   public vertices: Vec2[];
   constructor(
+    transform: TTransform,
     _vertices: Array<Vec2Union>,
     public width: number,
-    public loopEnd = false
+    public loopEnd = false,
   ) {
-    super();
+    super(transform);
     this.vertices = _vertices.map(vec2);
   }
 
@@ -405,24 +400,16 @@ class Outline extends GLShape {
           prevBevel1,
           prevDir,
           curBevel1,
-          curDir
+          curDir,
         ).toVec3();
         const i2 = intersectionLineLine(
           prevBevel2,
           prevDir,
           curBevel2,
-          curDir
+          curDir,
         ).toVec3();
         return [...i1.get(), ...i2.get()];
-      }
+      },
     ).flat();
   }
-}
-
-export function outline(
-  vertices: Vec2Array[],
-  width: number,
-  loopEnd: boolean
-) {
-  return new Outline(vertices, width, loopEnd);
 }

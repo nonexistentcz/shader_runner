@@ -1,7 +1,7 @@
 import { getCanvas } from "./gl";
 import { GLShaderSource } from "./transformer/shaderSource";
 import { uniform3f } from "./gl";
-import { unitMatrix } from "./utils";
+import { unitMatrix } from "./utils/matrix/utils";
 
 function empty(_fn: any, _options?: any) {}
 const texturePass = empty;

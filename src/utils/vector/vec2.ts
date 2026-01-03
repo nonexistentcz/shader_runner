@@ -1,4 +1,4 @@
-import { Vec3Array, Vec2Array, MapFn, degrees, Vec3 } from ".";
+import { Vec3Array, Vec2Array, MapFn, degrees, Vec3, Vec2Union } from ".";
 
 export class Vec2 {
   static fromVec3(vec: Vec3 | Vec3Array) {
@@ -149,11 +149,6 @@ export function intersectionLineLine(
   const t = x.cross(_bVec) / cross;
 
   return _aStart.add(_aVec.multiply(t));
-}
-
-export type Vec2Union = Vec2 | Vec2Array;
-export function resolveVec2(vec: Vec2Union) {
-  return vec instanceof Vec2 ? vec.get() : vec;
 }
 
 export function bevelLine(start: Vec2Union, vec: Vec2Union, offset: number) {

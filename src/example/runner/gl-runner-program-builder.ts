@@ -1,5 +1,6 @@
 import { GL2Wrapper, GLUniformValue, ShaderType, uniform1f } from "../../gl";
 import { GLShape } from "../../render";
+import { ShapeTransform } from "../../render/types";
 import { GLRunnerProgram } from "./gl-runner-program";
 import {
   GLRegisterFunction,
@@ -17,18 +18,30 @@ function getVertDefault(gl: GL2Wrapper) {
   return gl.createShader(ShaderType.Vertex).fetchSource("/shader/main.vert");
 }
 
-export class GLRunnerProgramBuilder<TShape> {
-  static create() {
-    return new GLRunnerProgramBuilder<GLShape>((shape) => shape);
+export class GLRunnerProgramBuilder<
+  TShape,
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>
+> {
+  static create<TMatrix, TTransform extends ShapeTransform<TMatrix>>() {
+    return new GLRunnerProgramBuilder<
+      GLShape<TMatrix, TTransform>,
+      TMatrix,
+      TTransform
+    >((shape) => shape);
   }
 
   private constructor(
-    private getShape: GLShapeGetter<TShape>,
+    private getShape: GLShapeGetter<TShape, TMatrix, TTransform>,
     private getFrag: GLRunnerShaderGetter = getFragDefault,
     private getVert: GLRunnerShaderGetter = getVertDefault,
     private beforeDrawFunctions: GLRunnerBeforeDraw[] = [],
     private registerFunctions: GLRegisterFunction[] = [],
-    private beforeShapeDrawFunctions: GLRunnerBeforeShapeDraw<TShape>[] = []
+    private beforeShapeDrawFunctions: GLRunnerBeforeShapeDraw<
+      TShape,
+      TMatrix,
+      TTransform
+    >[] = []
   ) {}
 
   fragment(sourceString: string) {
@@ -63,7 +76,9 @@ export class GLRunnerProgramBuilder<TShape> {
     return this;
   }
 
-  useBeforeShapeDraw(beforeDraw: GLRunnerBeforeShapeDraw<TShape>) {
+  useBeforeShapeDraw(
+    beforeDraw: GLRunnerBeforeShapeDraw<TShape, TMatrix, TTransform>
+  ) {
     this.beforeShapeDrawFunctions.push(beforeDraw);
     return this;
   }
@@ -73,7 +88,9 @@ export class GLRunnerProgramBuilder<TShape> {
     return this;
   }
 
-  useCustomShape<TCustomShape>(getShape: GLShapeGetter<TCustomShape>) {
+  useCustomShape<TCustomShape>(
+    getShape: GLShapeGetter<TCustomShape, TMatrix, TTransform>
+  ) {
     if (this.beforeShapeDrawFunctions.length > 0) {
       console.warn(
         "GLRunnerProgramBuilder: beforeShapeDraw functions assigned before shape is defined, the functions will be discarded"

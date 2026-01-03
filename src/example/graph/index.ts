@@ -1,13 +1,13 @@
 import { GLRunner } from "../runner";
-import { line } from "../../render/shapes";
 import { map } from "../../utils/ease";
 import { vec2, vec4 } from "../../utils/vector";
 import { randomMapped } from "../shapes/shape";
-import { GLRunnerProgram } from "../runner/gl-runner-program";
+import { GLRunnerProgram3D } from "../runner/types";
+import { line3D } from "../../render/shape3d";
 
 const NONEX = vec4([0.66, 0.12, 0.28, 1]);
 
-type Line = ReturnType<typeof line>;
+type Line = ReturnType<typeof line3D>;
 
 const runner = new GLRunner();
 let gShapes: Line[] | undefined;
@@ -25,11 +25,11 @@ function getShapesFromArray(arr: number[]) {
   const lineWidth = 1 / length;
   return arr.map((height, index) => {
     const offset = (index / (length - 1)) * 2 - 1;
-    return line(vec2([offset, -1]), vec2([offset, height]), lineWidth);
+    return line3D(vec2([offset, -1]), vec2([offset, height]), lineWidth);
   });
 }
 
-function useGraph(program: GLRunnerProgram<Line>, shapes: Line[]) {
+function useGraph(program: GLRunnerProgram3D<Line>, shapes: Line[]) {
   if (gShapes) gShapes.forEach((shape) => program.removeShape(shape));
   gShapes = shapes;
   program.useShapes(shapes);
@@ -49,7 +49,7 @@ function createGraph() {
   arrNext = getRandomArray(length);
 }
 
-function initGraph(program: GLRunnerProgram<Line>) {
+function initGraph(program: GLRunnerProgram3D<Line>) {
   createGraph();
   const shapes = getShapesFromArray(arrCurr!);
   useGraph(program, shapes);
@@ -57,7 +57,7 @@ function initGraph(program: GLRunnerProgram<Line>) {
 
 export default async function init() {
   const canvas = runner.getCanvas();
-  const program = await runner.createRunnerProgram((builder) =>
+  const program = await runner.createRunnerProgram3D((builder) =>
     builder
       .fragmentUrl("/shader/graph.frag")
       .useCustomShape((shape: Line) => shape)
@@ -70,7 +70,7 @@ export default async function init() {
   animate(program);
 }
 
-function animate(program: GLRunnerProgram<Line>, time = 0) {
+function animate(program: GLRunnerProgram3D<Line>, time = 0) {
   x += (time - timeLast) / 1000;
   timeLast = time;
   if (x > 1) {

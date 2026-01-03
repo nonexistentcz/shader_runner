@@ -1,4 +1,4 @@
-import { Vec3 } from ".";
+import { Vec2, Vec3 } from ".";
 import { swizzleIndices } from "./utils";
 
 export type Vec2Array = [number, number];
@@ -20,3 +20,4 @@ export type SwizzleString =
   | SwizzleStringVec4;
 
 export type Vec3Union = Vec3 | Vec3Array;
+export type Vec2Union = Vec2 | Vec2Array;

@@ -131,7 +131,8 @@ export class Vec3 {
   }
 }
 
-export function vec3(vector: Vec3Array) {
+export function vec3(vector: Vec3Union) {
+  if (vector instanceof Vec3) return vector;
   return new Vec3(vector);
 }
 

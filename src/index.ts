@@ -8,6 +8,7 @@ import initOutline from "./example/shape";
 import initColor from "./example/color";
 import initPostProcess from "./example/post";
 import initTexture from "./example/texture";
+import init2D from "./example/two-dimensions";
 
 // initBalls();
 // initGraph();
@@ -16,5 +17,6 @@ import initTexture from "./example/texture";
 // initBezier();
 // initOutline();
 // initColor();
-initPostProcess();
+// initPostProcess();
 // initTexture();
+init2D();

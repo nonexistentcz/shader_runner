@@ -12,6 +12,7 @@ import { Vec4Array } from "../utils/vector";
 import { GLFramebuffer } from "./framebuffer";
 import { GLTexture } from "./texture/texture";
 import { GLShape } from "../render";
+import { ShapeTransform } from "../render/types";
 
 const TEXTURE_UNIT_LIMIT = 31;
 
@@ -122,8 +123,8 @@ export class GL2Wrapper {
     return this.gl.getError();
   }
 
-  drawShape(
-    shape: GLShape,
+  drawShape<TMatrix, TTransform extends ShapeTransform<TMatrix>>(
+    shape: GLShape<TMatrix, TTransform>,
     type: GLenum = this.gl.UNSIGNED_SHORT,
     offset: GLintptr = 0
   ) {

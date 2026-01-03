@@ -5,19 +5,19 @@ import {
   TextureInternalFormat,
   TextureIntSizes,
 } from "../../gl/texture/types";
-import { rectangle } from "../../render";
+import { rectangle3D } from "../../render/shape3d";
 import { NONEX } from "../common";
 import { GLRunner } from "../runner";
-import { GLRunnerProgram } from "../runner/gl-runner-program";
+import { GLRunnerProgram3D } from "../runner/types";
 
 const runner = new GLRunner().setClearColor(NONEX.get());
 
 export default async function initTexture() {
   const uTexture = uniform1i("u_Texture", 0);
-  const program = await runner.createRunnerProgram((builder) =>
+  const program = await runner.createRunnerProgram3D((builder) =>
     builder.fragmentUrl("/shader/post_effect.frag").uniform(uTexture)
   );
-  program.use().useShape(rectangle(1, 1));
+  program.use().useShape(rectangle3D(1, 1));
   await runner
     .setActiveTexture(uTexture.value)
     .createTexture(TextureTarget.Texture2D)
@@ -33,7 +33,7 @@ export default async function initTexture() {
   requestAnimationFrame(() => animate(program));
 }
 
-function animate(program: GLRunnerProgram) {
+function animate(program: GLRunnerProgram3D) {
   runner.clear();
   program.draw();
   requestAnimationFrame(() => animate(program));

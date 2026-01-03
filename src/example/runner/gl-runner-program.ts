@@ -1,5 +1,6 @@
 import { BufferType, GL2Wrapper, GLProgram } from "../../gl";
-import { GLShape } from "../../render";
+import { GLScene } from "../../render/scene";
+import { ShapeTransform } from "../../render/types";
 import {
   GLRegisterFunction,
   GLRunnerBeforeDraw,
@@ -7,15 +8,23 @@ import {
   GLShapeGetter,
 } from "./types";
 
-export class GLRunnerProgram<TShape = GLShape> {
+export class GLRunnerProgram<
+  TShape,
+  TMatrix,
+  TTransform extends ShapeTransform<TMatrix>
+> {
   private shapes: TShape[] = [];
 
   constructor(
     private gl: GL2Wrapper,
     private program: GLProgram,
-    private _getShape: GLShapeGetter<TShape>,
+    private _getShape: GLShapeGetter<TShape, TMatrix, TTransform>,
     private _registerFn: GLRegisterFunction[],
-    private _beforeShapeDraw: GLRunnerBeforeShapeDraw<TShape>[],
+    private _beforeShapeDraw: GLRunnerBeforeShapeDraw<
+      TShape,
+      TMatrix,
+      TTransform
+    >[],
     private _beforeDraw: GLRunnerBeforeDraw[]
   ) {}
 
@@ -37,6 +46,10 @@ export class GLRunnerProgram<TShape = GLShape> {
 
     this.shapes.push(shape);
     return this;
+  }
+
+  createScene() {
+    return new GLScene<TShape>();
   }
 
   useShapes(shapes: TShape[]) {
@@ -70,6 +83,11 @@ export class GLRunnerProgram<TShape = GLShape> {
     this.beforeDraw(time);
 
     this.shapes.forEach(this.drawShape, this);
+  }
+
+  drawScene(scene: GLScene<TShape>, time = 0) {
+    this.beforeDraw(time);
+    scene.shapes.forEach(this.drawShape, this);
   }
 
   drawShapes(shapes: TShape[], time = 0) {

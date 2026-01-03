@@ -1,7 +1,7 @@
 import { GLRunner } from "../runner";
 import { createShape, handleCollisionBallBall, collideBallWall } from "./shape";
 import { BOUNDING_BOX, NONEX } from "../common";
-import { GLRunnerProgram } from "../runner/gl-runner-program";
+import { GLRunnerProgram3D } from "../runner/types";
 
 export type Shape = ReturnType<typeof createShape>;
 
@@ -20,12 +20,14 @@ function update() {
     collideBallWall(ball);
   });
   shapes.forEach((ball) => {
-    ball.obj.setCenter(ball.obj.center.toVec2().add(ball.speed).toVec3());
+    ball.obj.transform.setCenter(
+      ball.obj.transform.center.toVec2().add(ball.speed).toVec3()
+    );
   });
 }
 
 export default async function init() {
-  const program = await runner.createRunnerProgram((builder) =>
+  const program = await runner.createRunnerProgram3D((builder) =>
     builder.useTime()
   );
   program.use();
@@ -46,7 +48,7 @@ export default async function init() {
   animate(program);
 }
 
-function animate(program: GLRunnerProgram, time = 0) {
+function animate(program: GLRunnerProgram3D, time = 0) {
   update();
   runner.clear();
   program.draw(time);

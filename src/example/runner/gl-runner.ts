@@ -1,11 +1,20 @@
-import { getCanvas, GLCanvas, uniform4x4 } from "../../gl";
+import { getCanvas, GLCanvas, uniform3x3, uniform4x4 } from "../../gl";
 import { GL2Wrapper } from "../../gl/wrapper";
 import { vec2, Vec2, Vec4Array } from "../../utils/vector";
 import { FramebufferTarget, TextureTarget } from "../../gl/web-gl-enums";
 import { uniform2fv } from "../../gl";
-import { Matrix4x4 } from "../../utils";
 import { GLRunnerProgramBuilder } from "./gl-runner-program-builder";
-import { BuilderFunction, GLUIEventHandler } from "./types";
+import {
+  BuilderFunction,
+  GLMouseCoords,
+  GLUIEventHandler,
+  GLUIMouseEventHandler,
+} from "./types";
+import Matrix4x4 from "../../utils/matrix/matrix4x4";
+import { Shape3DTransform } from "../../render/shape3d";
+import { ShapeTransform } from "../../render/types";
+import Matrix3x3 from "../../utils/matrix/matrix3x3";
+import { Shape2DTransform } from "../../render/shape2d";
 
 export function toClipCoords(vec: Vec2) {
   return new Vec2([vec.x * 2 - 1, vec.y * 2 - 1]);
@@ -15,8 +24,8 @@ export class GLRunner {
   private gl: GL2Wrapper;
   private canvas: GLCanvas;
   private _resolution = vec2([0, 0]);
-  private _mouse = vec2([0, 0]);
-  private mouseMoveHandlers: GLUIEventHandler[] = [];
+  private _mouse: GLMouseCoords = { clip: vec2([0, 0]), screen: vec2([0, 0]) };
+  private mouseMoveHandlers: GLUIMouseEventHandler[] = [];
   private onResizeHandlers: GLUIEventHandler[] = [];
 
   constructor(canvasId?: string) {
@@ -41,12 +50,13 @@ export class GLRunner {
     return this.gl.createFramebuffer(framebufferTarget);
   }
 
-  onMouseMove(fn: GLUIEventHandler) {
+  onMouseMove(fn: GLUIMouseEventHandler) {
     this.mouseMoveHandlers.push(fn);
     return this;
   }
 
-  onResize(fn: GLUIEventHandler) {
+  onResize(fn: GLUIEventHandler, dryRun?: boolean) {
+    if (dryRun) fn(this._resolution, new UIEvent("dry"));
     this.onResizeHandlers.push(fn);
     return this;
   }
@@ -57,7 +67,9 @@ export class GLRunner {
     return this;
   }
 
-  createProgram<TShape>(buildProgram: BuilderFunction<TShape>) {
+  createProgram<TShape, TMatrix, TTransform extends ShapeTransform<TMatrix>>(
+    buildProgram: BuilderFunction<TShape, TMatrix, TTransform>,
+  ) {
     return buildProgram(GLRunnerProgramBuilder.create()).build(this.gl);
   }
 
@@ -82,31 +94,61 @@ export class GLRunner {
       const uv = new Vec2([e.x, e.y]).divideElements(res);
       const coords = toClipCoords(new Vec2([uv.x, 1 - uv.y]));
       const aspectRatio = res.x / res.y;
-      const mouseCoords = new Vec2([coords.x * aspectRatio, coords.y]).divide(
-        0.9
-      );
-      this._mouse = mouseCoords;
-      this.mouseMoveHandlers.forEach((handler) => handler(mouseCoords, e));
+      const clip = new Vec2([coords.x * aspectRatio, coords.y]).divide(0.9);
+      const screen = new Vec2([e.x, e.y]);
+      this._mouse = { clip, screen };
+      this.mouseMoveHandlers.forEach((handler) => handler(this._mouse, e));
     });
     return this;
   }
 
-  createRunnerProgram<TShape>(buildProgram: BuilderFunction<TShape>) {
+  createRunnerProgram3D<TShape>(
+    buildProgram: BuilderFunction<TShape, Matrix4x4, Shape3DTransform>,
+  ) {
     this.adjustSizeAndViewport();
     const uResolution = uniform2fv("u_Resolution", this._resolution.get());
     const uTransform = uniform4x4("u_Transform", Matrix4x4.unit());
     const uMouse = uniform2fv("u_Mouse", [0, 0]);
 
-    const program = this.createProgram<TShape>((builder) =>
-      buildProgram(builder)
-        .uniform(uResolution)
-        .uniform(uMouse)
-        .uniform(uTransform)
-        .useBeforeShapeDraw((_, s) => uTransform.update(Matrix4x4.fromShape(s)))
+    const program = this.createProgram<TShape, Matrix4x4, Shape3DTransform>(
+      (builder) =>
+        buildProgram(builder)
+          .uniform(uResolution)
+          .uniform(uMouse)
+          .uniform(uTransform)
+          .useBeforeShapeDraw((_, s) =>
+            uTransform.update(Matrix4x4.fromShape3D(s)),
+          ),
     );
 
     this.onResize((resolution) => uResolution.update(resolution.get()));
-    this.onMouseMove((mouseCoords) => uMouse.update(mouseCoords.get()));
+    this.onMouseMove((mouseCoords) => uMouse.update(mouseCoords.clip.get()));
+
+    return program;
+  }
+
+  createRunnerProgram2D<TShape>(
+    buildProgram: BuilderFunction<TShape, Matrix3x3, Shape2DTransform>,
+  ) {
+    this.adjustSizeAndViewport();
+    const uResolution = uniform2fv("u_Resolution", this._resolution.get());
+    const uTransform = uniform3x3("u_Transform", Matrix3x3.unit());
+    const uMouse = uniform2fv("u_Mouse", [0, 0]);
+
+    const program = this.createProgram<TShape, Matrix3x3, Shape2DTransform>(
+      (builder) =>
+        buildProgram(builder)
+          .vertexUrl("/shader/main2d.vert")
+          .uniform(uResolution)
+          .uniform(uMouse)
+          .uniform(uTransform)
+          .useBeforeShapeDraw((_, s) =>
+            uTransform.update(Matrix3x3.fromShape2D(s)),
+          ),
+    );
+
+    this.onResize((resolution) => uResolution.update(resolution.get()));
+    this.onMouseMove((mouseCoords) => uMouse.update(mouseCoords.screen.get()));
 
     return program;
   }

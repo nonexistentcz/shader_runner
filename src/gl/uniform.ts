@@ -1,4 +1,6 @@
-import { Matrix4x4, Vec2Array, Vec3Array, Vec4Array } from "../utils";
+import { Vec2Array, Vec3Array, Vec4Array } from "../utils";
+import Matrix3x3 from "../utils/matrix/matrix3x3";
+import Matrix4x4 from "../utils/matrix/matrix4x4";
 
 export function uniform1f(name: string, value: number) {
   return new GLUniformValue(name, value, function (gl, location) {
@@ -99,6 +101,12 @@ export function uniform3uiv(name: string, value: Vec3Array) {
 export function uniform4uiv(name: string, value: Vec4Array) {
   return new GLUniformValue(name, value, function (gl, location) {
     return gl.uniform4uiv(location, this.value);
+  });
+}
+
+export function uniform3x3(name: string, value: Matrix3x3) {
+  return new GLUniformValue(name, value, function (gl, location) {
+    return gl.uniformMatrix3fv(location, false, this.value.toFlat());
   });
 }
 
