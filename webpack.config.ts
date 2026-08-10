@@ -19,7 +19,11 @@ const config: webpack.Configuration = {
   module: {
     rules: [
       { test: /\.txt|frag|vert$/, use: "raw-loader" },
-      { test: /\.tsx?$/, use: "ts-loader", exclude: "/node_modules/" },
+      {
+        test: /\.tsx?$/,
+        use: { loader: "esbuild-loader", options: { target: "esnext" } },
+        exclude: /node_modules/,
+      },
       {
         test: /\.s[ac]ss$/,
         use: ["style-loader", "css-loader", "sass-loader"],
