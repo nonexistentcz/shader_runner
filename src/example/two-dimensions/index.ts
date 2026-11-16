@@ -13,7 +13,7 @@ export default async function init() {
   const program = await runner.createRunnerProgram2D((program) =>
     program
       .useCustomShape((shape: GLRunnerShape2D<{ color: Vec3 }>) => shape.shape)
-      .fragmentUrl("/shader/color.frag")
+      .fragmentUrl("/shader/noise.frag")
       .uniform(uColor)
       .useBeforeShapeDraw(({ color }) => uColor.update(color.get())),
   );
@@ -24,7 +24,8 @@ export default async function init() {
   draw();
   runner.setClearColor([0, 0, 0, 0]);
 
-  function draw() {
+  function draw(time = 0) {
+    mouseShape.transform.angle = time / 500;
     runner.clear();
     program.draw();
     requestAnimationFrame(draw);

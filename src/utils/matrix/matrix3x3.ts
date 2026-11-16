@@ -40,8 +40,8 @@ export default class Matrix3x3 {
   }
 
   static fromShape2D(shape: Shape2D) {
-    return Matrix3x3.rotation(shape.transform.angle).translate(
-      ...shape.transform.center.get()
+    return Matrix3x3.translated(...shape.transform.center.get()).rotate(
+      shape.transform.angle
     );
   }
 

@@ -20,8 +20,8 @@ export class Shape2DTransform implements ShapeTransform<Matrix3x3> {
   constructor(public center: Vec2, public angle: number) {}
   getMatrix() {
     return Matrix3x3.unit()
-      .rotate(this.angle)
-      .translate(...this.center.get());
+      .translate(...this.center.get())
+      .rotate(this.angle);
   }
 
   static init(options: InitOptions = {}) {
