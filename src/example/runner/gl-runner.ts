@@ -116,13 +116,16 @@ export class GLRunner {
           .uniform(uResolution)
           .uniform(uMouse)
           .uniform(uTransform)
+          // updated before drawing, when this program is in use, as gl.uniform*
+          // writes to the current program and handlers may fire while another one is
+          .useBeforeDraw(() => {
+            uResolution.update(this._resolution.get());
+            uMouse.update(this._mouse.clip.get());
+          })
           .useBeforeShapeDraw((_, s) =>
             uTransform.update(Matrix4x4.fromShape3D(s)),
           ),
     );
-
-    this.onResize((resolution) => uResolution.update(resolution.get()));
-    this.onMouseMove((mouseCoords) => uMouse.update(mouseCoords.clip.get()));
 
     return program;
   }
@@ -142,19 +145,26 @@ export class GLRunner {
           .uniform(uResolution)
           .uniform(uMouse)
           .uniform(uTransform)
+          // see createRunnerProgram3D
+          .useBeforeDraw(() => {
+            uResolution.update(this._resolution.get());
+            uMouse.update(this._mouse.screen.get());
+          })
           .useBeforeShapeDraw((_, s) =>
             uTransform.update(Matrix3x3.fromShape2D(s)),
           ),
     );
-
-    this.onResize((resolution) => uResolution.update(resolution.get()));
-    this.onMouseMove((mouseCoords) => uMouse.update(mouseCoords.screen.get()));
 
     return program;
   }
 
   setClearColor(color: Vec4Array) {
     this.gl.setClearColor(color);
+    return this;
+  }
+
+  enableAlphaBlending() {
+    this.gl.enableAlphaBlending();
     return this;
   }
 

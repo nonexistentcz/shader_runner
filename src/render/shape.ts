@@ -17,6 +17,7 @@ export class GLShape<
   protected _indexBuffer?: GLBuffer;
   public drawType = DrawType.Triangles;
   private _vertexCount = 0;
+  private _boundingRadius = 0;
 
   constructor(public transform: TTransform) {}
 
@@ -30,6 +31,11 @@ export class GLShape<
 
   get vertexCount() {
     return this._vertexCount;
+  }
+
+  /** Distance from the shape origin to its farthest vertex */
+  get boundingRadius() {
+    return this._boundingRadius;
   }
 
   bind({ index, vertex }: Buffers) {
@@ -46,6 +52,13 @@ export class GLShape<
       new Uint16Array(Array.from({ length: vertices.length / 3 }, (_, i) => i)),
     );
     this._vertexCount = vertices.length / 3;
+    this._boundingRadius = 0;
+    for (let i = 0; i < vertices.length; i += 3) {
+      this._boundingRadius = Math.max(
+        this._boundingRadius,
+        Math.hypot(vertices[i], vertices[i + 1], vertices[i + 2]),
+      );
+    }
     return this;
   }
 

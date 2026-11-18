@@ -42,7 +42,7 @@ export class GL2Wrapper {
 
   useProgram(program: GLProgram | WebGLProgram) {
     this.gl.useProgram(
-      program instanceof GLProgram ? program.getProgram() : program
+      program instanceof GLProgram ? program.getProgram() : program,
     );
     return this;
   }
@@ -101,7 +101,7 @@ export class GL2Wrapper {
   setActiveTexture(textureUnit: number) {
     if (textureUnit < 0 || textureUnit > TEXTURE_UNIT_LIMIT)
       throw new Error(
-        `${textureUnit} is not a valid texture unit, if not, update the limits`
+        `${textureUnit} is not a valid texture unit, if not, update the limits`,
       );
 
     // @ts-expect-error this could potentially break in the future
@@ -111,6 +111,12 @@ export class GL2Wrapper {
 
   setClearColor([r, g, b, a]: Vec4Array) {
     this.gl.clearColor(r, g, b, a);
+    return this;
+  }
+
+  enableAlphaBlending() {
+    this.enable(EnableFlags.Blend);
+    this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
     return this;
   }
 
@@ -126,7 +132,7 @@ export class GL2Wrapper {
   drawShape<TMatrix, TTransform extends ShapeTransform<TMatrix>>(
     shape: GLShape<TMatrix, TTransform>,
     type: GLenum = this.gl.UNSIGNED_SHORT,
-    offset: GLintptr = 0
+    offset: GLintptr = 0,
   ) {
     this.gl.drawElements(shape.drawType, shape.vertexCount, type, offset);
     return this;

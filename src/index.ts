@@ -9,6 +9,7 @@ import initColor from "./example/color";
 import initPostProcess from "./example/post";
 import initTexture from "./example/texture";
 import init2D from "./example/two-dimensions";
+import initPoster from "./example/poster";
 
 // initBalls();
 // initGraph();
@@ -19,4 +20,5 @@ import init2D from "./example/two-dimensions";
 // initColor();
 // initPostProcess();
 // initTexture();
-init2D();
+// init2D();
+initPoster();

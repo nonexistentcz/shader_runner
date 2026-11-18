@@ -6,8 +6,10 @@ import { shaderModuleTransformer } from "./shaderModuleTransformer";
 
 const BASE_PATH = "./src/shader/";
 
-watch(BASE_PATH, (type, fileName) => {
-  if (!fileName || type === "rename") return;
+// editors that save atomically (write temp file + rename) emit "rename", not "change"
+// recursive so changes to imported modules (e.g. module/noise.glsl) invalidate too
+watch(BASE_PATH, { recursive: true }, (_type, fileName) => {
+  if (!fileName) return;
   ShaderFile.invalidate(fileName);
 });
 

@@ -21,6 +21,13 @@ float N21(vec2 coords) {
     return N21(coords, 0);
 }
 
+// uniformly distributed per-pixel hash (Dave Hoskins), so P(hash < t) == t
+float Hash12(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * .1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
 vec2 N22(vec2 coords, int seed) {
     vec3 a = fract(coords.xyx * vec3(123.34, 234.34, 345.65));
     a += dot(a, a + 534.45 + float(seed));
